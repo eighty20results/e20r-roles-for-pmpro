@@ -21,6 +21,7 @@ namespace E20R\Roles_For_PMPro\Addon;
 
 use Braintree\Util;
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro;
+use E20R\Roles_For_PMPro\Role_Definitions;
 use E20R\Utilities\Cache;
 use E20R\Utilities\Utilities;
 use E20R\Licensing;
@@ -272,8 +273,16 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			return $translated;
 		}
-        
-        
+		
+		/**
+         * Don't send email notice(s)
+         *
+		 * @param string $message
+		 * @param int $reply_id
+		 * @param int $topic_id
+		 *
+		 * @return misc Email message or null
+		 */
         public function prevent_subscr_mail( $message, $reply_id, $topic_id ) {
         
 		    return false;
@@ -355,7 +364,15 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			return $result;
 		}
-  
+		
+		/**
+         * Checks whether the user has the right(s) to add to the forum/topic/reply
+         *
+		 * @param int $post_id
+		 * @param int $user_id
+		 *
+		 * @return bool
+		 */
 		public function user_can_add( $post_id, $user_id ) {
 			
 			$result = false;
@@ -379,8 +396,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			return $result;
         }
+        
 		/**
-		 * Check for read permissions to
+		 * Check for read permissions to forum/topic/reply
 		 *
 		 * @param          $post_id
 		 * @param null|int $user_id
@@ -490,6 +508,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			return $result;
 		}
 		
+		/**
+         * Return the permission (forum_permission) stub for the specified user ID
+         *
+		 * @param int $user_id
+		 *
+		 * @return string
+		 */
 		private function get_user_level_perms( $user_id ) {
 			
 			$utils      = Utilities::get_instance();
@@ -604,6 +629,15 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			return $result;
 		}
 		
+		/**
+         * Return a specific type of capabilities
+         *
+		 * @param        $type
+		 * @param        $capabilities
+		 * @param string $perm
+		 *
+		 * @return array
+		 */
 		private function caps_of_type( $type, $capabilities, $perm = 'no_access' ) {
 			
 			$utils = Utilities::get_instance();
@@ -636,6 +670,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			return $return;
 		}
 		
+		/**
+         * Map/Remap permission strings to the requested type (add/read permissions)
+         *
+		 * @param string $permission
+		 * @param string $type
+		 *
+		 * @return null|string
+		 */
 		private function map_perm( $permission, $type ) {
 			
 			$mapped = null;
@@ -887,6 +929,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 		}
 		
+		/**
+         * Load add-on actions/filters when the add-on is active & enabled
+         *
+		 * @param string $stub Lowercase Add-on class name
+		 */
 		final public static function is_enabled( $stub ) {
 			
 			$utils = Utilities::get_instance();
@@ -934,7 +981,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 		}
 		
-		
+		/**
+		 * @param string $content
+		 * @param int    $reply_id
+		 *
+		 * @return string
+		 */
 		public function hide_forum_entry( $content = '', $reply_id = 0 ) {
 		    
 		    $utils = Utilities::get_instance();
