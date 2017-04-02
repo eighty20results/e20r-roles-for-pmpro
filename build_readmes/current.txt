@@ -1,2 +1,1 @@
-Adds support for role management by membership level & infrastructure for modules like a bbPress forum access module.
-Initial Release (v1.0) - Trial version (Beta).
+ENH/FIX: Reordered Option filters
