@@ -901,6 +901,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				'deactivate_addon',
 			), 10, 1 );
 			
+			add_filter( 'e20r-license-add-new-licenses', array(
+				self::get_instance(),
+				'add_new_license_info',
+			), 10, 1 );
+			
 			if ( true === parent::is_enabled( $stub ) ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
@@ -918,10 +923,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					'delete_level_settings',
 				), 10, 2 );
 				
-				add_filter( 'e20r-license-add-new-licenses', array(
-					self::get_instance(),
-					'add_new_license_info',
-				), 10, 1 );
 				add_filter( 'e20r_roles_addon_options_bbPress_Roles', array(
 					self::get_instance(),
 					'register_settings',
