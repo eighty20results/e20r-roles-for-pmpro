@@ -901,10 +901,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				'deactivate_addon',
 			), 10, 1 );
 			
-			add_filter( 'e20r-license-add-new-licenses', array(
-				self::get_instance(),
-				'add_new_license_info',
-			), 10, 1 );
+			/**
+			 * Configuration actions & filters
+			 */
+			add_filter( 'e20r_roles_general_level_capabilities', array( self::get_instance(), 'add_capabilities_to_role', ), 10, 3 );
+			add_filter( 'e20r-license-add-new-licenses', array( self::get_instance(), 'add_new_license_info', ), 10, 1 );
+			add_filter( 'e20r_roles_addon_options_bbPress_Roles', array( self::get_instance(), 'register_settings', ), 10, 1 );
 			
 			if ( true === parent::is_enabled( $stub ) ) {
 				
@@ -914,27 +916,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				 * Membership related settings for role(s) add-on
 				 */
 				add_action( 'e20r_roles_level_settings', array( self::get_instance(), 'load_level_settings' ), 10, 2 );
-				add_action( 'e20r_roles_level_settings_save', array(
-					self::get_instance(),
-					'save_level_settings',
-				), 10, 2 );
-				add_action( 'e20r_roles_level_settings_delete', array(
-					self::get_instance(),
-					'delete_level_settings',
-				), 10, 2 );
-				
-				add_filter( 'e20r_roles_addon_options_bbPress_Roles', array(
-					self::get_instance(),
-					'register_settings',
-				), 10, 1 );
-				/**
-				 * Configuration actions & filters
-				 */
-				add_filter( 'e20r_roles_general_level_capabilities', array(
-					self::get_instance(),
-					'add_capabilities_to_role',
-				), 10, 3 );
-				
+				add_action( 'e20r_roles_level_settings_save', array( self::get_instance(), 'save_level_settings', ), 10, 2 );
+				add_action( 'e20r_roles_level_settings_delete', array( self::get_instance(), 'delete_level_settings', ), 10, 2 );
+    
 				/** Access filters for the add-on to use/leverage */
 				add_filter( 'e20r_roles_addon_has_access', array( self::get_instance(), 'has_access' ), 10, 4 );
 				add_filter( 'the_posts', array( self::get_instance(), 'check_access' ), 10, 2 );
@@ -947,7 +931,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				add_filter( 'the_excerpt', array( self::get_instance() , 'hide_forum_entry' ), 999, 2 );
     
 				self::get_instance()->configure_forum_admin_capabilities();
-				
 			}
 		}
 		
