@@ -1,1 +1,3 @@
-ENH/FIX: Reordered Option filters
+BUG/FIX: Whitescreen when deleting PMPro Membership Level(s)
+ENHANCEMENT: Avoid confusion in namespace(s)
+ENHANCEMENT: Clean up Namespace
