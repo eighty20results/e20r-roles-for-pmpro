@@ -21,7 +21,7 @@ namespace E20R\Roles_For_PMPro;
 
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro as Roles_For_PMPro;
 use E20R\Roles_For_PMPro\Manage_Roles as Manage_Roles;
-use E20R\Utilities\Utilities as Utilities;
+use E20R\Utilities\Utilities;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	wp_die( __( "Cannot access file directly", Roles_For_PMPro::plugin_slug ) );
@@ -201,17 +201,17 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			$existing_caps = $role_def->capabilities;
 			
 			if ( WP_DEBUG ) {
-				error_log("Current capabilities assigned to {$role_name}: " . print_r( $existing_caps, true ) );
+				error_log( "Current capabilities assigned to {$role_name}: " . print_r( $existing_caps, true ) );
 			}
 			
 			// Removing all existing capabilities from the role (we're resetting, remember!?!)
-			foreach( $existing_caps as $cap => $state ) {
+			foreach ( $existing_caps as $cap => $state ) {
 				
 				$defaults = self::default_capabilities();
 				
 				if ( ! in_array( $cap, $defaults ) ) {
-				
-						if ( WP_DEBUG ) {
+					
+					if ( WP_DEBUG ) {
 						error_log( "Removing {$cap} from role {$role_name}" );
 					}
 					
@@ -222,8 +222,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			// Add the required/requested capabilities
 			foreach ( $this->level_settings['capabilities'] as $capability ) {
 				
-				if (WP_DEBUG) {
-					error_log("Adding {$capability} to role {$role_name}");
+				if ( WP_DEBUG ) {
+					error_log( "Adding {$capability} to role {$role_name}" );
 				}
 				
 				$role_def->add_cap( $capability );
@@ -249,8 +249,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 		 */
 		public function add_level_role( $level_id ) {
 			
-			if (WP_DEBUG) {
-				error_log("Adding role to level {$level_id} if needed");
+			if ( WP_DEBUG ) {
+				error_log( "Adding role to level {$level_id} if needed" );
 			}
 			
 			$this->level_settings = $this->get_level_options( $level_id );
@@ -300,15 +300,23 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			$role_name = Manage_Roles::role_key . $level_id;
 			
 			// Find users with the role name assigned to them
-			$users = new \WP_User_Query(
+			$user_query = new \WP_User_Query(
 				array(
 					'role' => $role_name,
 				)
 			);
 			
-			// Remove the role from all users
-			foreach ( $users as $user ) {
-				$user->remove_role( $role_name );
+			if ( WP_DEBUG ) {
+				error_log( 'Result: ' . $user_query->get_total() . " users found" );
+			}
+			
+			if ( ! empty( $user_query->get_results() ) ) {
+				
+				// Remove the role from all users
+				foreach ( $user_query->get_results() as $user ) {
+					
+					$user->remove_role( $role_name );
+				}
 			}
 			
 			// Delete the role from the system
@@ -421,10 +429,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			
 			if ( ! empty( $role ) ) {
 				
-				if (WP_DEBUG) {
-					error_log("Role {$role_name} exists in the system");
-					error_log("Capabilities: " . print_r( $role->capabilities, true ) );
+				if ( WP_DEBUG ) {
+					error_log( "Role {$role_name} exists in the system" );
+					error_log( "Capabilities: " . print_r( $role->capabilities, true ) );
 				}
+				
 				return true;
 			}
 			
