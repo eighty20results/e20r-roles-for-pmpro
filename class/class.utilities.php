@@ -19,7 +19,7 @@
 
 namespace E20R\Utilities;
 
-use E20R\Utilities\Utilities as Utilities;
+// use E20R\Utilities\Utilities as Utilities;
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro as Roles_For_PMPro;
 
 // Disallow direct access to the class definition
