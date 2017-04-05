@@ -154,7 +154,7 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 			foreach ( $status as $s ) {
 				
 				// Grab the users of that membershi level/status.
-				$user_ids = self::$instance->get_members( $level_id, $s );
+				$user_ids = self::get_members( $level_id, $s );
 				
 				if ( in_array( $user_id, $user_ids ) ) {
 					$ret_val = $ret_val || true;
