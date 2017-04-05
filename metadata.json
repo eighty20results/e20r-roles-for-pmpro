@@ -1,17 +1,17 @@
 {
   "name" : "E20R Roles for Paid Memberships Pro",
   "slug" : "e20r-roles-for-pmpro",
-  "download_url" : "https://eighty20results.com/protected-content/e20r-roles-for-pmpro/e20r-roles-for-pmpro-1.4.zip",
-  "version" : "1.4",
+  "download_url" : "https://eighty20results.com/protected-content/e20r-roles-for-pmpro/e20r-roles-for-pmpro-1.5.zip",
+  "version" : "1.5",
   "tested": "4.7.3",
   "requires": "3.9",
   "author" : "Thomas Sjolshagen <thomas@eighty20results.com>",
   "author_homepage": "https://eighty20results.com/thomas-sjolshagen",
-  "last_updated": "2017-04-04 11:45:00",
+  "last_updated": "2017-04-05 16:00:00",
   "homepage": "https://eighty20results.com/wordpress-plugins/e20r-roles-for-pmpro/",
   "sections" : {
     "description" : "Extensible WordPress Roles & Capability support for Paid Memberships Pro. Add-on modules for this plugin include bbPress Forum membership level support & access configuration. You can give everybody read-only access to all threads and replies for a forum. You can choose between read-only level access, Add Replies, Add Topics or Add Forum support to a membership level, or you can assign a membership level as 'Support Staff' or 'Admin Staff'",
-    "changelog": "<h3>1.4</h3><ol><li>BUG/FIX: Whitescreen when deleting PMPro Membership Level(s)</li><li>ENHANCEMENT: Avoid confusion in namespace(s)</li><li>ENHANCEMENT: Clean up Namespace</li></ol><h3>1.3</h3><ol><li>ENH/FIX: Reordered Option filters</li></ol><h3>1.2</h3><ol><li>BUG/FIX: Didn't include new license settings on load</li><li>BUG/FIX: Missing source files in build process</li><li>ENHANCEMENT: Plugin Updates to v4.x</li></ol><h3>1.0</h3><ol><li>Adds support for role management by membership level & infrastructure for modules like a bbPress forum access module.</li><li>Initial Release (v1.0) - Trial version (Beta).</li></ol>",
+    "changelog": "<h3>1.5</h3><ol><li>BUG/FIX: Whitescreen during PMPro Checkout</li></ol><h3>1.4</h3><ol><li>BUG/FIX: Whitescreen when deleting PMPro Membership Level(s)</li><li>ENHANCEMENT: Avoid confusion in namespace(s)</li><li>ENHANCEMENT: Clean up Namespace</li></ol><h3>1.3</h3><ol><li>ENH/FIX: Reordered Option filters</li></ol><h3>1.2</h3><ol><li>BUG/FIX: Didn't include new license settings on load</li><li>BUG/FIX: Missing source files in build process</li><li>ENHANCEMENT: Plugin Updates to v4.x</li></ol><h3>1.0</h3><ol><li>Adds support for role management by membership level & infrastructure for modules like a bbPress forum access module.</li><li>Initial Release (v1.0) - Trial version (Beta).</li></ol>",
     "faq": "<h3>I found a bug in the plugin.</h3>Please report your issue to us by using the <a href='https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/' target='_blank'>E20R Roles for PMPro</a> Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day."
     }
 }
