@@ -331,16 +331,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
-		 * TODO: Add functionality to restrict bbPress forum(s) (port pmpro-bbPress add-on functionality)
+		 * TODO: Remove dependency on PMPro bbPress add-on forum(s) (port pmpro-bbPress add-on functionality)
 		 */
 		public function restrict_forums() {
-		
-		}
-		
-		/**
-		 * TODO: Set the Membership Level when a pmpro_changeMembershipLevel() call is made
-		 */
-		public function set_role_on_level_change( $user_id, $level_id ) {
 		
 		}
 		
