@@ -19,24 +19,25 @@
 
 namespace E20R\Roles_For_PMPro\Addon;
 
-use Braintree\Util;
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro;
 use E20R\Roles_For_PMPro\Role_Definitions;
 use E20R\Utilities\Cache;
 use E20R\Utilities\Utilities;
 use E20R\Licensing;
 
-if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
+define( 'ADDON_STUB', 'buddypress_roles' );
+define( 'ADDON_NAME', 'BuddyPress Roles' );
+
+if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 	
-	class bbPress_Roles extends E20R_Roles_Addon {
+	class BuddyPress_Roles extends E20R_Roles_Addon {
 		
 		const CAN_ACCESS = 'can_access';
 		const CAN_READ = 'can_read';
 		const CAN_EDIT = 'can_edit';
 		const CAN_ADD = 'can_add';
-		const CANNOT_ACCESS = 'no_access';
 		
-		const CACHE_GROUP = 'bbpress_roles';
+		const CACHE_GROUP = 'buddypress_roles';
 		
 		private $_add_topic_perm = 'publish_topics';
 		private $_add_forum_perm = 'publish_forums';
@@ -49,14 +50,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		private $_read_forum_perm = 'read_forums';
 		
 		/**
-		 * Configured list of labels for forum access mapped against constant(s)
+		 * The name of this class
 		 *
-		 * @var array
+		 * @var string
 		 */
-		private $labels = array();
+		private $class_name;
 		
 		/**
-		 * @var bbPress_Roles
+		 * @var BuddyPress_Roles
 		 */
 		private static $instance;
 		
@@ -65,7 +66,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 *
 		 * @var string $option_name
 		 */
-		private $option_name = 'e20r_ao_bbpress';
+		private $option_name = 'e20r_ao_buddypress';
 		
 		/**
 		 * @var array List of capabilities to grant zero access to bbPress forum/thread/replies
@@ -103,46 +104,38 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		private $_forum_admin_capabilities = array();
 		
 		/**
-		 * bbPress_Roles constructor.
+		 * BuddyPress_Roles constructor.
 		 */
 		protected function __construct() {
 			
 			parent::__construct();
 			
-			self::$instance = $this;
-			
-			$this->labels = array(
-				'no_access'     => array(
-					'level_settings' => __( "No Access", E20R_Roles_For_PMPro::plugin_slug ),
-					'summary'        => __( "None", E20R_Roles_For_PMPro::plugin_slug ),
-				),
-				'read_only'     => array(
-					'level_settings' => __( "Read Only", E20R_Roles_For_PMPro::plugin_slug ),
-					'summary'        => __( 'Read', E20R_Roles_For_PMPro::plugin_slug ),
-				),
-				'add_replies'   => array(
-					'level_settings' => __( "Can reply to existing topic(s)", E20R_Roles_For_PMPro::plugin_slug ),
-					'summary'        => __( 'Replies', E20R_Roles_For_PMPro::plugin_slug ),
-				),
-				'add_threads'   => array(
-					'level_settings' => __( "Can create new topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ),
-					'summary'        => __( "Threads/Replies", E20R_Roles_For_PMPro::plugin_slug ),
-				),
-				'add_forum'     => array(
-					'level_settings' => __( "Can create new forum(s), topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ),
-					'summary'        => __( "Forums/Threads/Replies", E20R_Roles_For_PMPro::plugin_slug ),
-				),
-				'forum_support' => array(
-					'level_settings' => __( "Has support rights to forum(s)", E20R_Roles_For_PMPro::plugin_slug ),
-					'summary'        => __( "Support", E20R_Roles_For_PMPro::plugin_slug ),
-				),
-				'forum_admin'   => array(
-					'level_settings' => __( "Has full admin rights for bbPress", E20R_Roles_For_PMPro::plugin_slug ),
-					'summary'        => __( "Admin", E20R_Roles_For_PMPro::plugin_slug ),
-				),
-			);
-			
+			if ( is_null( self::$instance ) ) {
+				self::$instance = $this;
+			}
+			$this->class_name = $this->maybe_extract_class_name( get_class( $this ) );
 			$this->define_settings();
+		}
+		
+		private function get_class_name() {
+			
+			if ( empty( $this->class_name ) ) {
+				$this->class_name = $this->maybe_extract_class_name( get_class( self::$instance ) );
+			}
+			
+			return $this->class_name;
+		}
+		
+		private function maybe_extract_class_name( $string ) {
+			
+			if ( WP_DEBUG ) {
+				error_log( "Supplied (potential) class name: {$string}" );
+			}
+			
+			$class_array = explode( '\\', $string );
+			$name        = $class_array[ ( count( $class_array ) - 1 ) ];
+			
+			return $name;
 		}
 		
 		/**
@@ -152,17 +145,18 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public static function load_addon( $stub = null ) {
 			
+			$class      = self::get_instance();
+			$utils      = Utilities::get_instance();
+			$class_name = $class->get_class_name();
+			
 			if ( WP_DEBUG ) {
-				error_log( "Loading the bbPress_Roles class action(s) " );
+				error_log( "Loading the {$class_name} class action(s) " );
 			}
 			
 			global $e20r_roles_addons;
 			
-			$class = self::get_instance();
-			$utils = Utilities::get_instance();
-			
 			if ( is_null( $stub ) ) {
-				$stub = 'bbpress_roles';
+				$stub = $class_name;
 			}
 			
 			// Check license status & prerequisites for this add-on
@@ -221,17 +215,19 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				error_log( "Have " . count( $settings['new_licenses'] ) . " new to process already" );
 			}
 			
+			$stub = strtolower( $this->get_class_name() );
+			
 			$settings['new_licenses'][] = array(
-				'label_for'     => 'bbpress_roles',
-				'fulltext_name' => $e20r_roles_addons['bbpress_roles']['label'],
-				'new_product'   => 'bbpress_roles',
+				'label_for'     => $stub,
+				'fulltext_name' => $e20r_roles_addons[ $stub ]['label'],
+				'new_product'   => $stub,
 				'option_name'   => "e20r_license_settings",
 				'name'          => 'license_key',
 				'input_type'    => 'password',
 				'value'         => null,
 				'email_field'   => "license_email",
 				'email_value'   => null,
-				'placeholder'   => sprintf( __( "Paste the purchased E20R Roles %s key here", "e20r-licensing" ), $e20r_roles_addons['bbpress_roles']['label'] ),
+				'placeholder'   => sprintf( __( "Paste the purchased E20R Roles %s key here", "e20r-licensing" ), $e20r_roles_addons[ $stub ]['label'] ),
 			);
 			
 			return $settings;
@@ -298,7 +294,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		public function remove_topics_text( $translated, $text, $domain ) {
 			global $pmpro_pages;
 			
-			if ( $domain === 'bbpress' && false !== strpos( $text, 'is closed to new topics and replies' ) ) {
+			if ( $domain === 'buddypress' && false !== strpos( $text, 'is closed to new topics and replies' ) ) {
 				$translated = sprintf( 'Log in, join, or upgrade your membership level to <a href="%s" target="_blank">add new questions to the forum</a>', get_permalink( $pmpro_pages['levels'] ) );
 			}
 			
@@ -309,7 +305,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			global $pmpro_pages;
 			
-			if ( $domain === 'bbpress' && false !== strpos( $text, 'is closed to new topics and replies' ) ) {
+			if ( $domain === 'buddypress' && false !== strpos( $text, 'is closed to new topics and replies' ) ) {
 				$translated = sprintf( 'Log in or become a member to <a href="%s" target="_blank">ask questions or post replies</a>', get_permalink( $pmpro_pages['levels'] ) );
 			}
 			
@@ -777,11 +773,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			global $e20r_roles_addons;
 			
+			$stub = strtolower( $this->get_class_name() );
 			// Are we supposed to be active?
-			if ( false == $e20r_roles_addons['bbpress_roles']['is_active'] ) {
+			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				
 				if ( WP_DEBUG ) {
-					error_log( "The bbPress Roles add-on is disabled" );
+					error_log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
 				}
 				
 				return $has_access;
@@ -834,11 +831,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			global $e20r_roles_addons;
 			
+			$stub = strtolower( $this->get_class_name() );
+			
 			if ( WP_DEBUG ) {
-				error_log( "Adding the bbPress Forum capabilities to the membership level capabilities?" );
+				error_log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
 			}
 			
-			if ( false == $e20r_roles_addons['bbpress_roles']['is_active'] ) {
+			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				return $capabilities;
 			}
 			
@@ -937,10 +936,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			global $e20r_roles_addons;
 			
 			$utils = Utilities::get_instance();
-			$utils->log( "In toggle_addon action handler for the bbPress add-on" );
+			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
 			
-			if ( 'bbpress_roles' !== $addon ) {
-				$utils->log( "Not processing the bbPress add-on: {$addon}" );
+			if ( ADDON_STUB !== $addon ) {
+				$utils->log( "Not processing the {$e20r_roles_addons[$addon]['label']} add-on: {$addon}" );
 				
 				return;
 			}
@@ -1045,44 +1044,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				add_filter( 'bbp_get_reply_excerpt', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				add_filter( 'bbp_get_reply_content', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				
-				add_filter( 'manage_users_custom_column', array(
-					self::get_instance(),
-					'add_user_role_to_list',
-				), 20, 3 );
-				
 				add_filter( 'the_content', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				add_filter( 'the_excerpt', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				
 				self::get_instance()->configure_forum_admin_capabilities();
 			}
-		}
-		
-		/**
-		 * Returns the column name for the user(s) permission to the forum (based on membership level)
-		 *
-		 * @param string $retval
-		 * @param string $column_name
-		 * @param int    $user_id
-		 *
-		 * @return mixed|string
-		 */
-		public function add_user_role_to_list( $retval = '', $column_name = '', $user_id = 0 ) {
-			
-			if ( 'bbp_user_role' === $column_name ) {
-				
-				$perms = $this->get_user_level_perms( $user_id );
-				$level = pmpro_getMembershipLevelForUser( $user_id );
-				
-				if ( isset( $level->name ) && 'no_access' !== $perms ) {
-					$retval = " {$level->name} ({$this->labels[ $perms ]['summary']})";
-				}
-				
-				if ( WP_DEBUG ) {
-					error_log( "User permissions: {$retval}" );
-				}
-			}
-			
-			return $retval;
 		}
 		
 		/**
@@ -1110,7 +1076,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public static function configure_addon() {
 			
-			parent::is_enabled( 'bbpress_roles' );
+			parent::is_enabled( ADDON_STUB );
 		}
 		
 		/**
@@ -1130,9 +1096,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$settings['section'] = array(
 				array(
-					'id'              => 'e20r_bbpress_role_global',
-					'label'           => __( "E20R Roles: bbPress Settings" ),
-					'render_callback' => array( $this, 'render_bbpress_settings_text' ),
+					'id'              => 'e20r_buddypress_role_global',
+					'label'           => __( "E20R Roles: BuddyPress Settings" ),
+					'render_callback' => array( $this, 'render_buddypress_settings_text' ),
 					'fields'          => array(
 						array(
 							'id'              => 'global_anon_read',
@@ -1178,7 +1144,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		public function validate_settings( $input ) {
 			
 			if ( WP_DEBUG ) {
-				error_log( "Input for save in bbPress_Roles:: " . print_r( $input, true ) );
+				error_log( "Input for save in BuddyPress_Roles:: " . print_r( $input, true ) );
 			}
 			
 			$defaults = $this->load_defaults();
@@ -1215,10 +1181,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		/**
 		 * Informational text about the bbPress Role add-on settings
 		 */
-		public function render_bbpress_settings_text() {
+		public function render_buddypress_settings_text() {
 			?>
-            <p class="e20r-bbpress-global-settings-text">
-				<?php _e( "Configure global settings for the E20R Roles: bbPress add-on", E20R_Roles_For_PMPro::plugin_slug ); ?>
+            <p class="e20r-buddypress-global-settings-text">
+				<?php _e( "Configure global settings for the E20R Roles: BuddyPress add-on", E20R_Roles_For_PMPro::plugin_slug ); ?>
             </p>
 			<?php
 		}
@@ -1257,7 +1223,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public function delete_level_settings( $level_id, $active_addons ) {
 			
-			if ( ! in_array( 'bbpress_roles', $active_addons ) ) {
+			if ( ! in_array( 'buddypress_roles', $active_addons ) ) {
 				if ( WP_DEBUG ) {
 					error_log( "bbPress Roles add-on is not active. Nothing to do!" );
 				}
@@ -1293,9 +1259,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public function save_level_settings( $level_id, $active_addons ) {
 			
-			if ( ! in_array( 'bbpress_roles', $active_addons ) ) {
+			$stub = strtolower( $this->get_class_name() );
+			if ( ! in_array( $stub, $active_addons ) ) {
 				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles add-on is not active. Nothing to do!" );
+					error_log( "BuddyPress Roles add-on is not active. Nothing to do!" );
 				}
 				
 				return false;
@@ -1304,7 +1271,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			if ( empty( $level_id ) ) {
 				
 				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles:  No level ID specified!" );
+					error_log( "BuddyPress Roles:  No level ID specified!" );
 				}
 				
 				return false;
@@ -1320,7 +1287,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				);
 			}
 			
-			$level_settings[ $level_id ]['forum_permission'] = $utils->get_variable( 'e20r_bbpress_settings-forum_permission', array() );
+			$level_settings[ $level_id ]['forum_permission'] = $utils->get_variable( 'e20r_buddypress_settings-forum_permission', array() );
 			
 			if ( WP_DEBUG ) {
 				error_log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
@@ -1372,22 +1339,23 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 			
 			?>
-            <h4><?php _e( 'bbPress Forum Access', E20R_Roles_For_PMPro::plugin_slug ); ?></h4>
+            <h4><?php _e( 'BuddyPress Configuration', E20R_Roles_For_PMPro::plugin_slug ); ?></h4>
             <table class="form-table">
                 <tbody>
-                <tr class="e20r-bbpress-settings">
+                <tr class="e20r-buddypress-settings">
                     <th scope="row" valign="top"><label
-                                for="e20r-roles-bbpress-permissions"><?php _e( "Forum access", E20R_Roles_For_PMPro::plugin_prefix ); ?></label>
+                                for="e20r-roles-buddypress-permissions"><?php _e( "Forum access", E20R_Roles_For_PMPro::plugin_prefix ); ?></label>
                     </th>
-                    <td class="e20r-bbpress-settings-select">
-                        <select name="e20r_bbpress_settings-forum_permission" id="e20r-roles-bbpress-permissions">
-                            <option value="no_access" <?php selected( 'no_access', $forum_permission ); ?>><?php esc_html_e( $this->labels['no_access']['level_settings'] ); ?></option>
-                            <option value="read_only" <?php selected( 'read_only', $forum_permission ); ?>><?php esc_html_e( $this->labels['read_only']['level_settings'] ); ?></option>
-                            <option value="add_replies" <?php selected( 'add_replies', $forum_permission ); ?>><?php esc_html_e( $this->labels['add_replies']['level_settings'] ); ?></option>
-                            <option value="add_threads" <?php selected( 'add_threads', $forum_permission ); ?>><?php esc_html_e( $this->labels['add_threads']['level_settings'] ); ?></option>
-                            <option value="add_forum" <?php echo selected( 'add_forum', $forum_permission ); ?>><?php esc_html_e( $this->labels['add_forum']['level_settings'] ); ?></option>
-                            <option value="forum_support" <?php selected( 'forum_support', $forum_permission ); ?>><?php esc_html_e( $this->labels['forum_support']['level_settings'] ); ?></option>
-                            <option value="forum_admin" <?php selected( 'forum_admin', $forum_permission ); ?>><?php esc_html_e( $this->labels['forum_admin']['level_settings'] ); ?></option>
+                    <td class="e20r-buddypress-settings-select">
+                        <select name="e20r_buddypress_settings-forum_permission" id="e20r-roles-buddypress-permissions">
+                            <option value="no_access" <?php selected( 'no_access', $forum_permission ); ?>><?php _e( "No Access", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+
+                            <option value="read_only" <?php selected( 'read_only', $forum_permission ); ?>><?php _e( "Read Only", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="add_replies" <?php selected( 'add_replies', $forum_permission ); ?>><?php _e( "Can reply to existing topic(s)", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="add_threads" <?php selected( 'add_threads', $forum_permission ); ?>><?php _e( "Can create new topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="add_forum" <?php echo selected( 'add_forum', $forum_permission ); ?>><?php _e( "Can create new forum(s), topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="forum_support" <?php selected( 'forum_support', $forum_permission ); ?>><?php _e( "Has support rights to forum(s)", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="forum_admin" <?php selected( 'forum_admin', $forum_permission ); ?>><?php _e( "Has full admin rights for bbPress", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
                         </select><br/>
                         <small><?php _e( "This membership level grants an active member one or more of the following rights to the bbPress forum(s) on this site...", E20R_Roles_For_PMPro::plugin_slug ); ?></small>
                     </td>
@@ -1653,7 +1621,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				'read_private_forums',
 			);
 			
-			$this->_read_only_capabilities = apply_filters( 'e20r_roles_bbpress_read_capabilities', $default_capabilities );
+			$this->_read_only_capabilities = apply_filters( 'e20r_roles_buddypress_read_capabilities', $default_capabilities );
 		}
 		
 		/**
@@ -1673,17 +1641,17 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$default_forum_capabilities  = array( 'publish_forums', 'edit_forums', 'read_hidden_forums', );
 			
 			$this->_add_replies_capabilities = apply_filters(
-				'e20r_roles_bbpress_add_reply_capabilities',
+				'e20r_roles_buddypress_add_reply_capabilities',
 				array_merge( $default_reply_capabilities, $this->_read_only_capabilities )
 			);
 			
 			$this->_add_threads_capabilities = apply_filters(
-				'e20r_roles_bbpress_add_thread_capabilities',
+				'e20r_roles_buddypress_add_thread_capabilities',
 				array_merge( $default_thread_capabilities, $this->_add_replies_capabilities )
 			);
 			
 			$this->_add_forum_capabilities = apply_filters(
-				'e20r_roles_bbpress_add_forum_capabilities',
+				'e20r_roles_buddypress_add_forum_capabilities',
 				array_merge( $default_forum_capabilities, $this->_add_threads_capabilities )
 			);
 			
@@ -1720,7 +1688,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			);
 			
 			$this->_forum_support_capabilities = apply_filters(
-				'e20r_roles_bbpress_forum_support_capabilities',
+				'e20r_roles_buddypress_forum_support_capabilities',
 				array_merge( $default_capabilities, $this->_add_forum_capabilities )
 			);
 		}
@@ -1746,15 +1714,15 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			);
 			
 			$this->_forum_admin_capabilities = apply_filters(
-				'e20r_roles_bbpress_forum_admin_capabilities',
+				'e20r_roles_buddypress_forum_admin_capabilities',
 				array_merge( $default_capabilities, $this->_forum_support_capabilities )
 			);
 		}
 		
 		/**
-		 * Fetch the properties for bbPress
+		 * Fetch the properties for BuddyPress
 		 *
-		 * @return bbPress_Roles
+		 * @return BuddyPress_Roles
 		 *
 		 * @since  1.0
 		 * @access public
@@ -1772,27 +1740,23 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 	
 	// Configure the add-on (global settings array)
 	global $e20r_roles_addons;
+	$stub = strtolower( ADDON_STUB );
 	
-	$e20r_roles_addons['bbpress_roles'] = array(
-		'class_name'            => 'bbPress_Roles',
-		'is_active'             => ( get_option( 'e20r_bbpress_roles_enabled', false ) == 1 ? true : false ),
+	$e20r_roles_addons[ $stub ] = array(
+		'class_name'            => 'BuddyPress_Roles',
+		'is_active'             => false, // ( get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
 		'status'                => 'deactivated',
-		'label'                 => 'bbPress Roles',
+		'label'                 => 'BuddyPress Roles',
 		'admin_role'            => 'manage_options',
 		'required_plugins_list' => array(
-			'bbpress/bbpress.php'                           => array(
-				'name' => 'bbPress Forum',
-				'url'  => 'https://wordpress.org/plugins/bbpress/',
+			'buddypress/buddypress.php'                     => array(
+				'name' => 'BuddyPress',
+				'url'  => 'https://wordpress.org/plugins/buddypress/',
 			),
 			'paid-memberships-pro/paid-memberships-pro.php' => array(
 				'name' => 'Paid Memberships Pro',
 				'url'  => 'https://wordpress.org/plugins/paid-memberships-pro/',
 			),
-			'pmpro-bbpress/pmpro-bbpress.php'               => array(
-				'name' => 'Paid Memberships Pro - bbPress Add-on',
-				'url'  => 'https://wordpress.org/plugins/pmpro-bbpress/',
-			),
-		
 		),
 	);
 	
