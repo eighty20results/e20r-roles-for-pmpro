@@ -66,7 +66,8 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 			$class = self::$instance;
 			
 			// Actions that require us to clear all of the PMPro Membership caches
-			add_action( '', 'PMPro_Members::clear_all_caches' );
+			add_action( 'profile_update', 'PMPro_Members::clear_all_caches' );
+			add_action( 'edit_user_profile_update', 'PMPro_Members::clear_all_caches' );
 			
 			// Actions that require us to clear membership level specific cache(s)
 			
@@ -87,7 +88,7 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 			global $wpdb;
 			
 			$class         = self::$instance;
-			$table_name       = ( isset( $wpdb->pmpro_memberships_users ) ? $wpdb->pmpro_memberships_users : "{$wpdb->prefix}pmpro_memberships_users");
+			$table_name    = ( isset( $wpdb->pmpro_memberships_users ) ? $wpdb->pmpro_memberships_users : "{$wpdb->prefix}pmpro_memberships_users" );
 			$blog_id       = get_current_blog_id();
 			$user_ids      = array();
 			$cache_timeout = intval( apply_filters( 'e20r_pmpro_member_cache_timeout_mins', 30 ) ) * MINUTE_IN_SECONDS;
@@ -189,8 +190,8 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 				// No cached data found. (re)Build the cache again
 				global $wpdb;
 				
-				$table_name       = ( isset( $wpdb->pmpro_memberships_users ) ? $wpdb->pmpro_memberships_users : "{$wpdb->prefix}pmpro_memberships_users");
-				$sql     = "SELECT user_id, membership_id FROM {$table_name} WHERE status = 'active'";
+				$table_name = ( isset( $wpdb->pmpro_memberships_users ) ? $wpdb->pmpro_memberships_users : "{$wpdb->prefix}pmpro_memberships_users" );
+				$sql        = "SELECT user_id, membership_id FROM {$table_name} WHERE status = 'active'";
 				
 				$results = $wpdb->get_results( $sql );
 				
@@ -289,9 +290,9 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 		private static function get_saved_member_statuses() {
 			
 			global $wpdb;
-			$class    = self::$instance;
-			$statuses = array();
-			$table_name       = ( isset( $wpdb->pmpro_memberships_users ) ? $wpdb->pmpro_memberships_users : "{$wpdb->prefix}pmpro_memberships_users");
+			$class      = self::$instance;
+			$statuses   = array();
+			$table_name = ( isset( $wpdb->pmpro_memberships_users ) ? $wpdb->pmpro_memberships_users : "{$wpdb->prefix}pmpro_memberships_users" );
 			
 			$sql      = "SELECT DISTINCT status FROM {$table_name}";
 			$statuses = $wpdb->get_col( $sql );
