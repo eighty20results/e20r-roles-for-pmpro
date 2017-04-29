@@ -125,7 +125,7 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 		 * Find user and compare their status to a status code, and a specific - or their current - membership level
 		 *
 		 * @param int      $user_id
-		 * @param string   $status
+		 * @param array   $status
 		 * @param int|null $level_id
 		 *
 		 * @return bool
