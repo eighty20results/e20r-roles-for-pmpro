@@ -161,37 +161,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			// Check license status & prerequisites for this add-on
 			parent::load_addon( $stub );
-			
-			/**
-			 * // Only load the actions if we're active
-			 * if ( true == $e20r_roles_addons[ $stub ]['is_active'] ) {
-			 *
-			 * $utils->log( "Loading actions/filters for {$e20r_roles_addons[$stub]['label']}" );
-			 *
-			 *
-			 * // Membership related settings for role(s) add-on
-			 *
-			 * add_action( 'e20r_roles_level_settings', array( $class, 'load_level_settings' ), 10, 2 );
-			 * add_action( 'e20r_roles_level_settings_save', array( $class, 'save_level_settings' ), 10, 2 );
-			 * add_action( 'e20r_roles_level_settings_delete', array( $class, 'delete_level_settings' ), 10, 2 );
-			 *
-			 * add_filter( 'e20r-license-add-new-licenses', array( $class, 'add_new_license_info' ), 10, 1 );
-			 *
-			 * // Configuration actions & filters
-			 * add_filter( 'e20r_roles_general_level_capabilities', array(
-			 * $class,
-			 * 'add_capabilities_to_role',
-			 * ), 10, 3 );
-			 *
-			 * // Access filters for the add-on to use/leverage
-			 * add_filter( 'e20r_roles_addon_has_access', array( $class, 'has_access' ), 10, 4 );
-			 * add_filter( 'the_posts', array( $class, 'check_access' ), 10, 2 );
-			 *
-			 * add_filter( 'bbp_is_forum_closed', array( $class, 'close_forum' ), 10, 3 );
-			 *
-			 * $class->configure_forum_admin_capabilities();
-			 * }
-			 */
 		}
 		
 		/**
@@ -232,114 +201,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			return $settings;
 		}
-		
-		/**
-		 * Deny edit access to the forum if the user isn't supposed to have access to it
-		 *
-		 * @param $closed
-		 * @param $forum_id
-		 * @param $check_ancestors
-		 *
-		 * @return bool
-		 */
-		public function close_forum( $closed, $forum_id, $check_ancestors ) {
-			
-			$utils = Utilities::get_instance();
-			
-			$utils->log( "Ancestors argument: " . print_r( $check_ancestors, true ) );
-			$utils->log( "Forum status: {$closed}" );
-			$user_id     = get_current_user_id();
-			$permissions = $this->get_user_level_perms( $user_id );
-			
-			// Can't be closed to support & admins
-			if ( in_array( $permissions, array( 'forum_support', 'forum_admin' ) ) ) {
-				return false;
-			}
-			
-			if ( bbp_is_single_topic() ) {
-				$utils->log( "Processing for a topic: {$forum_id}" );
-				
-				$closed = ( ! user_can( $user_id, 'publish_topics' ) );
-				add_filter( 'gettext', array( $this, 'remove_replies_text' ), 10, 3 );
-			}
-			
-			if ( bbp_is_single_forum() ) {
-				
-				$utils->log( "Processing for a forum: {$forum_id}" );
-				$closed = ( ! user_can( $user_id, 'publish_forums' ) );
-				add_filter( 'gettext', array( $this, 'remove_topics_text' ), 10, 3 );
-			}
-			
-			if ( bbp_is_single_reply() ) {
-				
-				$utils->log( "Processing for a reply: {$forum_id}" );
-				$closed = ( ! user_can( $user_id, 'publish_replies' ) );
-				add_filter( 'gettext', array( $this, 'remove_replies_text' ), 10, 3 );
-			}
-			
-			
-			// Block outgoing notification email(s)
-			if ( true === $closed ) {
-				add_filter( 'bbp_subscription_mail_message', array(
-					self::get_instance(),
-					'prevent_subscr_mail',
-				), 9999999, 3 );
-			}
-			
-			$utils->log( "Forum status: {$closed}" );
-			
-			return $closed;
-		}
-		
-		public function remove_topics_text( $translated, $text, $domain ) {
-			global $pmpro_pages;
-			
-			if ( $domain === 'buddypress' && false !== strpos( $text, 'is closed to new topics and replies' ) ) {
-				$translated = sprintf( 'Log in, join, or upgrade your membership level to <a href="%s" target="_blank">add new questions to the forum</a>', get_permalink( $pmpro_pages['levels'] ) );
-			}
-			
-			return $translated;
-		}
-		
-		public function remove_replies_text( $translated, $text, $domain ) {
-			
-			global $pmpro_pages;
-			
-			if ( $domain === 'buddypress' && false !== strpos( $text, 'is closed to new topics and replies' ) ) {
-				$translated = sprintf( 'Log in or become a member to <a href="%s" target="_blank">ask questions or post replies</a>', get_permalink( $pmpro_pages['levels'] ) );
-			}
-			
-			return $translated;
-		}
-		
-		/**
-		 * Don't send email notice(s)
-		 *
-		 * @param string $message
-		 * @param int    $reply_id
-		 * @param int    $topic_id
-		 *
-		 * @return mixed Email message or null
-		 */
-		public function prevent_subscr_mail( $message, $reply_id, $topic_id ) {
-			
-			return false;
-		}
-		
-		/**
-		 * TODO: Add functionality to restrict bbPress forum(s) (port pmpro-bbPress add-on functionality)
-		 */
-		public function restrict_forums() {
-		
-		}
-		
-		/**
-		 * TODO: Set the Membership Level when a pmpro_changeMembershipLevel() call is made
-		 */
-		public function set_role_on_level_change( $user_id, $level_id ) {
-		
-		}
-		
+  
 		/**
 		 * Can the user access the post(s) in the forum(s)
 		 *
@@ -406,7 +268,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 				
 				if ( null === ( $result = Cache::get( self::CAN_EDIT . "_{$user_id}_{$post_id}", self::CACHE_GROUP ) ) ) {
 					
-					$result = $this->check_forum_access_for( $user_id, $post_id, 'edit' );
+					$result = $this->check_access_for( $user_id, $post_id, 'edit' );
 					
 					$utils->log( "User {$user_id} " . ( $result ? 'can' : 'can\'t' ) . " edit {$post_id}" );
 					
@@ -438,7 +300,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 				
 				if ( null === ( $result = Cache::get( self::CAN_ADD . "_{$user_id}_{$post_id}", self::CACHE_GROUP ) ) ) {
 					
-					$result = $this->check_forum_access_for( $user_id, $post_id, 'add' );
+					$result = $this->check_access_for( $user_id, $post_id, 'add' );
 					
 					$utils->log( "User {$user_id} " . ( $result ? 'can' : 'can\'t' ) . " add {$post_id}" );
 					
@@ -470,7 +332,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 				
 				if ( null === ( $result = Cache::get( self::CAN_READ . "_{$user_id}_{$post_id}", self::CACHE_GROUP ) ) ) {
 					
-					$result = $this->check_forum_access_for( $user_id, $post_id, 'read' );
+					$result = $this->check_access_for( $user_id, $post_id, 'read' );
 					
 					$utils->log( "User {$user_id} " . ( $result ? 'can' : 'can\'t' ) . " read {$post_id}" );
 					
@@ -490,7 +352,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 		 *
 		 * @return bool
 		 */
-		private function check_forum_access_for( $user_id, $post_id, $access_type ) {
+		private function check_access_for( $user_id, $post_id, $access_type ) {
 			
 			$utils = Utilities::get_instance();
 			
@@ -516,45 +378,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 				
 				$capabilities = $this->select_capabilities( $permission );
 				$post_type    = get_post_type( $post_id );
-				
-				$forum_perm = $this->{"${prefix}_forum_perm"};
-				$topic_perm = $this->{"{$prefix}_topic_perm"};
-				
-				$utils->log( "Checking {$post_type} for {$forum_perm} or {$topic_perm}" );
-				switch ( $post_type ) {
-					
-					case 'topic':
-						if ( $topic = bbp_get_topic( $post_id ) ) {
-							
-							$forum_id = $topic->post_parent;
-							
-							if ( ! empty( $forum_id ) ) {
-								$result = ( in_array( $forum_perm, $capabilities ) && user_can( $user_id, $forum_perm ) );
-								$utils->log( " Forum permission for {$user_id} is " . ( $result ? 'Yes' : 'No' ) );
-							}
-						}
-						break;
-					
-					case 'reply':
-						if ( $reply = bbp_get_reply( $post_id ) ) {
-							
-							$topic_id = $reply->post_parent;
-							
-							if ( ! empty( $topic_id ) && ( in_array( $topic_perm, $capabilities ) && user_can( $user_id, $topic_perm ) ) ) {
-								
-								if ( $topic = bbp_get_topic( $topic_id ) ) {
-									
-									$forum_id = $topic->post_parent;
-									
-									if ( ! empty( $forum_id ) ) {
-										$result = ( in_array( $forum_perm, $capabilities ) && user_can( $user_id, $forum_perm ) );
-										$utils->log( " Topic permission for {$user_id} is " . ( $result ? 'Yes' : 'No' ) );
-									}
-								}
-							}
-						}
-						break;
-				}
 			}
 			
 			return $result;
@@ -601,86 +424,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			Cache::delete( self::CAN_ACCESS );
 		}
-		
-		/**
-		 * Check if the user have read access to the forum/topic/reply (post id)
-		 *
-		 * @param int $post_id
-		 * @param int $user_id
-		 *
-		 * @return bool
-		 */
-		public function user_can_access( $post_id, $user_id = null ) {
-			
-			$result = false;
-			$utils  = Utilities::get_instance();
-			
-			if ( ! empty( $post_id ) ) {
-				
-				if ( null === $user_id ) {
-					$user_id = get_current_user_id();
-				}
-				
-				if ( null === ( $result = Cache::get( self::CAN_ACCESS . "_{$user_id}_{$post_id}", self::CACHE_GROUP ) ) ) {
-					
-					if ( function_exists( 'pmpro_getMembershipLevelForUser' ) ) {
-						$utils->log( "Checking user access permissions" );
-						
-						$level = pmpro_getMembershipLevelForUser( $user_id );
-						
-						if ( isset( $level->id ) ) {
-							
-							$level_options = $this->load_option( 'level_settings' );
-							
-							if ( isset( $level_options[ $level->id ] ) ) {
-								
-								$permission = $level_options[ $level->id ]['forum_permission'];
-								$utils->log( "User with ID {$user_id} belongs to level {$level->id} and has {$permission} permissions" );
-							}
-						}
-					}
-					
-					$required = true;
-					$type     = get_post_type( $post_id );
-					
-					switch ( $type ) {
-						case 'forum':
-							$forum = bbp_get_forum( $post_id );
-							break;
-						case 'topic':
-							if ( false !== ( $topic = bbp_get_topic( $post_id ) ) ) {
-								$forum_id = $topic->post_parent;
-								if ( ! empty( $forum_id ) ) {
-								
-								}
-							}
-					}
-					$capabilities = $this->select_capabilities( $permission );
-					
-					$utils->log( "Starting with " . count( $capabilities ) . " to check: " . print_r( $capabilities, true ) );
-					$capabilities = $this->caps_of_type( $type, $capabilities, $permission );
-					
-					$function = "bbp_is_single_{$type}";
-					
-					$utils->log( "Now have " . count( $capabilities ) . " to check" );
-					
-					foreach ( $capabilities as $cap ) {
-						
-						$utils->log( "Checking if user {$user_id} is allowed to {$cap} with {$function}" );
-						$required = $required && ( $function() && user_can( $user_id, $cap ) );
-					}
-					
-					$result = $result || $required;
-					
-					$utils->log( "User {$user_id} " . ( $result ? 'can' : 'can\'t' ) . " read/access {$post_id}/{$type}" );
-					
-					Cache::set( self::CAN_ACCESS . "_{$user_id}_{$post_id}", $result, ( 10 * MINUTE_IN_SECONDS ), self::CACHE_GROUP );
-				}
-			}
-			
-			return $result;
-		}
-		
+  
 		/**
 		 * Return a specific type of capabilities
 		 *
@@ -744,19 +488,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			return $mapped;
 		}
-		
-		/**
-		 * Is the post we've been passed a bbPress forum/topic/reply?
-		 *
-		 * @param \WP_Post $post
-		 *
-		 * @return bool
-		 */
-		public function is_forum_post( $post ) {
-			
-			return in_array( $post->post_type, array( 'forum', 'topic', 'reply' ) );
-		}
-		
+  
 		/**
 		 * Filter Handler: Access filter for bbPress/PMPro memership (override)
 		 *
@@ -1014,7 +746,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 				self::get_instance(),
 				'add_new_license_info',
 			), 10, 1 );
-			add_filter( 'e20r_roles_addon_options_bbPress_Roles', array(
+			add_filter( 'e20r_roles_addon_options_buddypress_Roles', array(
 				self::get_instance(),
 				'register_settings',
 			), 10, 1 );
@@ -1035,41 +767,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 					self::get_instance(),
 					'delete_level_settings',
 				), 10, 2 );
-				
-				/** Access filters for the add-on to use/leverage */
-				add_filter( 'e20r_roles_addon_has_access', array( self::get_instance(), 'has_access' ), 10, 4 );
-				add_filter( 'the_posts', array( self::get_instance(), 'check_access' ), 10, 2 );
-				
-				add_filter( 'bbp_is_forum_closed', array( self::get_instance(), 'close_forum' ), 10, 3 );
-				add_filter( 'bbp_get_reply_excerpt', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
-				add_filter( 'bbp_get_reply_content', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
-				
-				add_filter( 'the_content', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
-				add_filter( 'the_excerpt', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
-				
-				self::get_instance()->configure_forum_admin_capabilities();
+    
+				// self::get_instance()->configure_forum_admin_capabilities();
 			}
 		}
 		
-		/**
-		 * @param string $content
-		 * @param int    $reply_id
-		 *
-		 * @return string
-		 */
-		public function hide_forum_entry( $content = '', $reply_id = 0 ) {
-			
-			$utils = Utilities::get_instance();
-			
-			if ( empty( $reply_id ) ) {
-				$reply_id = bbp_get_reply_id( $reply_id );
-			}
-			
-			$utils->log( "Reply ID: " . print_r( $reply_id, true ) );
-			
-			
-			return $content;
-		}
 		
 		/**
 		 * Append this add-on to the list of configured & enabled add-ons
@@ -1172,7 +874,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			}
 			
 			if ( WP_DEBUG ) {
-				error_log( "bbPress_Roles saving " . print_r( $this->settings, true ) );
+				error_log( "BuddyPress_Roles saving " . print_r( $this->settings, true ) );
 			}
 			
 			return $this->settings;
@@ -1364,158 +1066,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
             </table>
 			<?php
 		}
-		
-		/**
-		 * Add the specified bbPress forum capabilities to the role
-		 *
-		 * @param string $role_name
-		 * @param string $type
-		 *
-		 * @return bool
-		 *
-		 * @access public
-		 * @since  1.0
-		 */
-		public function add_access_to_role( $role_name, $type = 'read_only' ) {
-			
-			$role = get_role( $role_name );
-			
-			if ( empty( $role ) ) {
-				return false;
-			}
-			
-			// Get the type specific capabilities
-			$capabilities = $this->select_capabilities( $type );
-			
-			foreach ( $capabilities as $cap ) {
-				
-				if ( false === $role->has_cap( $cap ) ) {
-					$role->add_cap( $cap );
-				}
-			}
-			
-			return true;
-		}
-		
-		/**
-		 * Remove the specified bbPress forum capabilities from the role
-		 *
-		 * @param string $role_name
-		 * @param string $type
-		 *
-		 * @return bool
-		 *
-		 * @access public
-		 * @since  1.0
-		 */
-		public function remove_access_from_role( $role_name, $type = 'read_only' ) {
-			
-			$role = get_role( $role_name );
-			
-			if ( empty( $role ) ) {
-				return false;
-			}
-			
-			// Get the type specific capabilities
-			$capabilities = $this->select_capabilities( $type );
-			
-			// Strip the capabilities
-			foreach ( $capabilities as $cap ) {
-				
-				if ( true === $role->has_cap( $cap ) ) {
-					$role->remove_cap( $cap );
-				}
-			}
-			
-			return true;
-		}
-		
-		/**
-		 * Configure forum access for a specific WordPress user ID
-		 *
-		 * @param int    $user_id
-		 * @param string $role_name
-		 * @param string $type
-		 *
-		 * @return bool
-		 *
-		 * @since  1.0
-		 * @access public
-		 */
-		public function forum_assign_access_to_user( $user_id, $role_name, $type = null ) {
-			
-			$user = get_user_by( 'ID', $user_id );
-			$role = get_role( $role_name );
-			
-			if ( empty( $role ) ) {
-				return false;
-			}
-			
-			// Do we need to add the capabilities to the user directly?
-			if ( false === $this->role_has_capabilities( $role_name, $type ) ) {
-				
-				// Get the type specific capabilities
-				$capabilities = $this->select_capabilities( $type );
-				
-				foreach ( $capabilities as $cap ) {
-					$user->add_cap( $cap );
-				}
-				
-			} else {
-				// Simply add the role
-				$user->add_role( $role_name );
-			}
-			
-			return true;
-		}
-		
-		/**
-		 * Remove access capabilities to a forum for a specific user
-		 *
-		 * @param int    $user_id
-		 * @param string $role_name
-		 * @param null   $type
-		 *
-		 * @return bool
-		 *
-		 * @access public
-		 * @since  1.0
-		 */
-		public function forum_remove_access_from_user( $user_id, $role_name, $type = null ) {
-			
-			$user = get_user_by( 'ID', $user_id );
-			$role = get_role( $role_name );
-			
-			// Get the type specific capabilities
-			$capabilities = $this->select_capabilities( $type );
-			
-			if ( false === $this->role_has_capabilities( $role_name, $type ) ) {
-				
-				foreach ( $capabilities as $cap ) {
-					$user->remove_cap( $cap );
-				}
-				
-			} else {
-				
-				// Does the role contain other non-standard capabilities?
-				$remaining_caps = array_intersect( $role->capabilities, array_merge( $capabilities, Role_Definitions::default_capabilities() ) );
-				
-				if ( empty( $remaining_caps ) ) {
-					
-					// Nope. Remove the role
-					$user->remove_role( $role_name );
-					
-				} else {
-					// Yes... Can't remove the user specific capabilities when the whole role would be affected!
-					$utils = Utilities::get_instance();
-					$utils->add_message( __( "Unable to remove the expected capabilities for the user!", E20R_Roles_For_PMPro::plugin_slug ), 'error' );
-				}
-			}
-			
-			return true;
-			
-		}
-		
+  
 		/**
 		 * Test whether the specified role has all of the required capabilities (based on the type)
 		 *
