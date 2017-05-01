@@ -380,10 +380,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$utils    = Utilities::get_instance();
 			$forum_id = bbp_get_forum_id();
-            
+			
 			$is_forum_entity = ( $this->is_forum() || $this->is_topic() || $this->is_reply() );
 			
-			if ( ( ! bbp_is_forum_archive() && false === empty( $forum_id ) && true === $is_forum_entity ) && ( bbp_is_forum_archive() && ! $this->user_can_read(  $post->ID, $current_user->ID ) ) ) {
+			if ( ( ! bbp_is_forum_archive() && false === empty( $forum_id ) && true === $is_forum_entity ) && ( bbp_is_forum_archive() && ! $this->user_can_read( $post->ID, $current_user->ID ) ) ) {
 				
 				$utils->log( "ID {$forum_id} is a valid forum entity? " . ( $is_forum_entity ? 'Yes' : 'No' ) );
 				
@@ -411,14 +411,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$utils = Utilities::get_instance();
 			
 			if ( null === $forum_id ) {
-			    global $post;
-			    
-			    if ( empty( $post->ID ) ) {
-			        return false;
-                } else {
-			        $forum_id = $post->ID;
-                }
-            }
+				global $post;
+				
+				if ( empty( $post->ID ) ) {
+					return false;
+				} else {
+					$forum_id = $post->ID;
+				}
+			}
 			// False if bbPress is inactive or not installed, or we're not in the loop
 			if ( false === $this->is_bbPress_active() ) {
 				$utils->log( "bbPress inactive (Forum) ???" );
@@ -441,7 +441,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 * @return bool
 		 */
 		private function is_topic( $forum_id = null ) {
-   
+			
 			$utils = Utilities::get_instance();
 			
 			if ( null === $forum_id ) {
@@ -1275,7 +1275,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 * @since  1.0
 		 */
 		private function load_defaults() {
-   
+			
 			return array(
 				'global_anon_read'   => false,
 				'topic_label'        => __( 'Topic', 'bbpress' ),
@@ -1518,6 +1518,78 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
+		 * @param \WP_Query $query
+		 *
+		 * @return \WP_Query
+		 */
+		public function pre_get_posts( $query ) {
+			
+			global $wpdb;
+			$utils = Utilities::get_instance();
+			
+			if ( is_admin() ) {
+				$utils->log( "Not on front-end of site" );
+				
+				return $query;
+			}
+			
+			if ( false === $query->is_search ) {
+				$utils->log( "Not a search operation" );
+				
+				return $query;
+			}
+			
+			if ( bbp_is_single_topic() ) {
+				$utils->log( "Not a list of topics" );
+				
+				return $query;
+			}
+			
+			$utils->log( "Processing WP Query... " );
+			
+			$sql                  = $wpdb->prepare( "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s", 'e20r_bbpress_access_levels' );
+			$restricted_forum_ids = $wpdb->get_col( $sql );
+			
+			if ( empty( $forum_ids ) ) {
+				$utils->log( "No protected forum(s) found!" );
+				
+				return $query;
+			}
+			
+			$utils->log( "Found " . count( $restricted_forum_ids ) . " forums: " . print_r( $restricted_forum_ids, true ) );
+			
+			if ( ! empty( $restricted_forum_ids ) ) {
+				
+				$excluded_ids = esc_sql( implode( ',', $restricted_forum_ids ) );
+				$sql          = $wpdb->prepare(
+					"SELECT DISTINCT post_id
+                                  FROM {$wpdb->postmeta}
+                                  WHERE meta_key = %s AND meta_value IN ( {$excluded_ids} )",
+					'_bbp_forum_id'
+				);
+				
+				$exclude_topics   = $wpdb->get_col( $sql );
+				$already_excluded = $query->get( 'post__not_in' );
+				
+				if ( ! empty( $already_excluded ) && ! is_array( $already_excluded ) ) {
+					
+					$already_excluded = array( $already_excluded );
+				}
+				
+				if ( empty( $already_excluded ) ) {
+					$skip_all = array_merge( $restricted_forum_ids, $exclude_topics );
+				} else {
+					$skip_all = array_merge( $already_excluded, $restricted_forum_ids, $exclude_topics );
+				}
+				
+				$utils->log( "List of post IDs to skip: " . print_r( $skip_all, true ) );
+				$query->set( 'post__not_in', $skip_all );
+			}
+			
+			return $query;
+		}
+		
+		/**
 		 * @param string $content
 		 * @param int    $reply_id
 		 *
@@ -1694,12 +1766,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				
 				if ( 'level_settings' == $key && isset( $this->settings[ $key ] ) ) {
 					
-				    $level_settings = $this->settings['level_settings'];
-				    
-				    if ( ( isset($level_settings[-1]) && count($level_settings ) <= 1 ) || empty( $level_settings ) ) {
-				        $level_settings = $defaults['level_settings'];
-                    }
-                    
+					$level_settings = $this->settings['level_settings'];
+					
+					if ( ( isset( $level_settings[ - 1 ] ) && count( $level_settings ) <= 1 ) || empty( $level_settings ) ) {
+						$level_settings = $defaults['level_settings'];
+					}
+					
 					foreach ( $level_settings as $level_id => $settings ) {
 						
 						if ( isset( $this->settings['level_settings'][ $level_id ]['capabilitiies'] ) ) {
@@ -1708,7 +1780,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 						
 						if ( true == $input['global_anon_read'] && ( 'no_access' === $this->settings['level_settings'][ $level_id ]['forum_permission'] ) ) {
 							$this->settings['level_settings'][ $level_id ]['forum_permission'] = 'read_only';
-							$settings['forum_permission'] = 'read_only';
+							$settings['forum_permission']                                      = 'read_only';
 						}
 						
 						$this->settings['level_settings'][ $level_id ]['capabilities'] = $this->select_capabilities( $settings['forum_permission'] );
@@ -1896,8 +1968,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 			
 			if ( 'no_access' === $forum_permission && $this->allow_anon_read() ) {
-			    $forum_permission = 'read_only';
-            }
+				$forum_permission = 'read_only';
+			}
 			?>
             <h4><?php _e( 'bbPress Forum Access', E20R_Roles_For_PMPro::plugin_slug ); ?></h4>
             <table class="form-table">
@@ -2431,6 +2503,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					update_option( '_bbp_default_role', 'e20r_bbpress_default_access' );
 				}
 				
+				add_action( 'admin_menu', array( self::get_instance(), 'add_pmpro_metabox' ), 10 );
+				
 				add_action( 'init', array( self::get_instance(), 'clear_blocked' ) );
 				add_action( 'template_redirect', array( self::get_instance(), 'restrict_forums' ) );
 				
@@ -2477,8 +2551,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					self::get_instance(),
 					'add_topics_as_pmpro_account_links',
 				), 10, 0 );
-				
-				add_action( 'admin_menu', array( self::get_instance(), 'add_pmpro_metabox' ), 10 );
 				
 				// Load the filtering logic for PMPro/Forums if set on PMPro's advanced settings page
 				if ( function_exists( 'pmpro_getOption' ) ) {
