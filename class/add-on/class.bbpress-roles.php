@@ -673,8 +673,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$utils->log( "Checking access for " . count( $posts ) . " posts" );
 			
 			foreach ( $posts as $post ) {
-				
-				
+    
 				$is_forum_post = $this->is_forum_post( $post );
 				
 				// Only check access for the post if it's one of the bbPress post types
@@ -791,6 +790,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					$user_id = get_current_user_id();
 				}
 				
+				if ( ! is_user_logged_in() && $this->allow_anon_read() ) {
+				    return true;
+                }
+                
 				if ( WP_DEBUG ) {
 					Cache::delete( self::CAN_READ . "_{$user_id}_{$post_id}", self::CACHE_GROUP );
 				}
@@ -1133,20 +1136,27 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				
 				return false;
 				
-			} else {
+			} else if ( is_user_logged_in() ) {
 				$this->clear_blocked( $user );
 			}
 			
 			// Anybody can read the content
-			if ( true == $this->load_option( 'global_anon_read' ) ) {
+			if ( true === $this->should_be_accessible() ) {
 				
-				$utils->log( "Anybody can view the forum post(s)!" );
-				$has_access = true;
+			    if ( in_array( $post->post_type, array( 'forum', 'topic' ) ) ) {
+				    $utils->log( "Can view the {$post->post_type}!" );
+				
+				    return true;
+			    }
 			}
 			
 			// Do we need to override the access value?
 			$access_for_levels = get_post_meta( $post->ID, 'e20r_bbpress_access_levels' );
 			
+			if ( !is_user_logged_in() ) {
+			    return $has_access;
+            }
+            
 			if ( ! isset( $user->membership_level ) ) {
 				$user->membership_level = pmpro_getMembershipLevelForUser( $user->ID );
 			}
@@ -1404,18 +1414,23 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$utils = Utilities::get_instance();
 			
+			if ( ! is_user_logged_in() ) {
+				$utils->log("Nothing to do since the user isn't logged in");
+			    return;
+			}
+			
 			if ( ! $this->is_bbPress_active() ) {
 				$utils->log( "Nothing to do since bbPress is deactivated" );
 				
 				return;
 			}
-			
+   
 			if ( false === $this->should_be_accessible() ) {
 				$utils->log( "Nothing to do since the forum is inaccessible" );
 				
 				return;
 			}
-			
+   
 			if ( empty( $user ) ) {
 				$user_id = get_current_user_id();
 				$user    = new \WP_User( $user_id );
@@ -1483,6 +1498,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			if ( ! empty( $hide_member_forums ) ) {
 				$post_types[] = 'forum';
+				$post_types[] = 'topic';
+				$post_types[] = 'reply';
+				
 				array_unique( $post_types );
 			}
 			
@@ -1526,7 +1544,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			global $wpdb;
 			$utils = Utilities::get_instance();
-			
+   
 			if ( is_admin() ) {
 				$utils->log( "Not on front-end of site" );
 				
@@ -2556,6 +2574,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					self::get_instance(),
 					'add_topics_as_pmpro_account_links',
 				), 10, 0 );
+				
+				add_filter( 'pmpro_has_membership_access_filter', array( self::get_instance(), 'has_access' ), 20, 4 );
 				
 				// Load the filtering logic for PMPro/Forums if set on PMPro's advanced settings page
 				if ( function_exists( 'pmpro_getOption' ) ) {
