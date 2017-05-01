@@ -156,7 +156,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			// add_action( 'pmpro_custom_advanced_settings', array( $this, 'global_settings_page' ), 10 );
 			
 			add_action( 'init', array( $this, 'load_translation' ) );
-			add_action( 'init', 'E20R\\Roles_For_PMPro\\PMPro_Content_Access::load', 1 );
+			add_action( 'plugins_loaded', 'E20R\\Roles_For_PMPro\\PMPro_Content_Access::load', 1 );
 			add_action( 'admin_menu', array( $this, 'load_admin_settings_page' ), 10 );
 			
 			if ( ! empty ( $GLOBALS['pagenow'] )
