@@ -1,1 +1,3 @@
-BUG/FIX: Whitescreen during PMPro Checkout
+ENHANCEMENT: Add test to avoid redirect loops for forum archive when no access is granted
+ENHANCEMENT: Now excludes/includes forums, topics and replies from searches if PMPro is configured to do so
+ENHANCEMENT: Load metabox for PMPro membership levels to require for forum(s)

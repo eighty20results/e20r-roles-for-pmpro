@@ -1545,6 +1545,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				return $query;
 			}
 			
+			if ( $this->allow_anon_read() ) {
+			    $utils->log("Anybody can read, so allow search as well!");
+			    return $query;
+            }
+            
 			$utils->log( "Processing WP Query... " );
 			
 			$sql                  = $wpdb->prepare( "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s", 'e20r_bbpress_access_levels' );
