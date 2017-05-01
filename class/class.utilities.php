@@ -185,6 +185,14 @@ if ( ! class_exists( 'E20R\\Utilities\\Utilities' ) ) {
 			
 		}
 		
+		public function nc_replace( $search, $replacer, $input ) {
+			
+			return preg_replace_callback( "/\b{$search}\b/i", function ( $matches ) use ( $replacer ) {
+				return ctype_lower($matches[0][0]) ? strtolower( $replacer ) : $replacer;
+			}, $input );
+		}
+		
+		
 		/**
 		 * Process REQUEST variable: Check for presence and sanitize it before returning value or default
 		 *
