@@ -39,12 +39,12 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 		private static $text_domain;
 		
 		/**
-         * Set the text domain to use, dynamically
+		 * Set the text domain to use, dynamically
 		 * Licensing constructor.
 		 */
 		private function __construct() {
 			
-		    self::$text_domain = apply_filters( 'e20r-licensing-text-domain', self::$text_domain );
+			self::$text_domain = apply_filters( 'e20r-licensing-text-domain', self::$text_domain );
 		}
 		
 		/**
@@ -52,37 +52,37 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 		 * The Ccache is configured to time out every 24 hours (or so)
 		 *
 		 * @param string $product_stub Name of the product/component to test the license for
-         * @param bool $force Whether to force the plugin to connect with the license server, regardless of cache value(s)
+		 * @param bool   $force        Whether to force the plugin to connect with the license server, regardless of cache value(s)
 		 *
 		 * @return bool
 		 */
 		public static function is_licensed( $product_stub = null, $force = false ) {
 			
-		    $utils = Utilities\Utilities::get_instance();
-		    $is_licensed = false;
-		    
+			$utils       = Utilities\Utilities::get_instance();
+			$is_licensed = false;
+			
 			if ( empty( $product_stub ) ) {
 				return false;
 			}
-            
-            $utils->log( "Checking license for {$product_stub}" );
-            
+			
+			$utils->log( "Checking license for {$product_stub}" );
+			
 			if ( null === ( $license_settings = Utilities\Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || true === $force ) {
-			    
-                $utils->log( "Invalid cache for " . self::CACHE_KEY );
-                
+				
+				$utils->log( "Invalid cache for " . self::CACHE_KEY );
+				
 				$is_licensed = self::get_license_status_from_server( $product_stub );
-                
-                // Get new/existing settings
-                $license_settings = self::get_license_settings();
-				$license_settings = $license_settings[$product_stub];
-                
-                // Update the local cache for the license
-                Utilities\Cache::set( self::CACHE_KEY, $license_settings, DAY_IN_SECONDS, self::CACHE_GROUP );
+				
+				// Get new/existing settings
+				$license_settings = self::get_license_settings();
+				$license_settings = $license_settings[ $product_stub ];
+				
+				// Update the local cache for the license
+				Utilities\Cache::set( self::CACHE_KEY, $license_settings, DAY_IN_SECONDS, self::CACHE_GROUP );
 			}
-            
-            $utils->log( "License status for {$product_stub}: {$license_settings['status']}" );
-            
+			
+			$utils->log( "License status for {$product_stub}: {$license_settings['status']}" );
+			
 			return ( 'active' == $license_settings['status'] ) ? true : false;
 		}
 		
@@ -182,7 +182,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			$license_status = false;
 			global $current_user;
 			
-			$settings = self::get_license_settings( $product );
+			$settings     = self::get_license_settings( $product );
 			$product_name = $settings['fulltext_name'];
 			
 			// Configure request for license check
@@ -194,7 +194,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			);
 			
 			$decoded = self::send_to_license_server( $api_params );
-   
+			
 			// License not validated
 			if ( ! isset( $decoded->result ) || 'success' != $decoded->result ) {
 				
@@ -220,7 +220,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 						}
 						$settings['domain']        = $domain->registered_domain;
 						$settings['fulltext_name'] = $product_name;
-						$settings['expires']       = isset($decoded->date_expiry ) ? strtotime( $decoded->date_expiry, current_time( 'timestamp' ) ) : null;
+						$settings['expires']       = isset( $decoded->date_expiry ) ? strtotime( $decoded->date_expiry, current_time( 'timestamp' ) ) : null;
 						$settings['status']        = $decoded->status;
 						$settings['first_name']    = $current_user->user_firstname;
 						$settings['last_name']     = $current_user->user_lastname;
@@ -237,7 +237,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			} else {
 				
 				$utils->log( "The {$product} license is on the server, but not active for this domain" );
-                $license_status = false;
+				$license_status = false;
 			}
 			
 			if ( $settings['expires'] < current_time( 'timestamp' ) || 'active' !== $settings['status'] ) {
@@ -271,7 +271,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 				return $settings;
 			}
 			
-			return $settings[ $product ];
+			return isset( $settings[ $product ] ) ? $settings[ $product ] : null;
 		}
 		
 		/**
@@ -323,16 +323,17 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			
 			$decoded = self::send_to_license_server( $api_params );
 			
-			if ( false === $decoded ){
+			if ( false === $decoded ) {
 				return $decoded;
 			}
 			
 			if ( 'success' !== $decoded->result ) {
-			    return false;
-            }
+				return false;
+			}
 			
 			$utils->log( "Removing license {$product}..." );
 			self::update_license_settings( $product, null );
+			
 			return true;
 			
 		}

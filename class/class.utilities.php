@@ -19,7 +19,7 @@
 
 namespace E20R\Utilities;
 
-use E20R\Utilities\Utilities as Utilities;
+// use E20R\Utilities\Utilities as Utilities;
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro as Roles_For_PMPro;
 
 // Disallow direct access to the class definition
@@ -184,6 +184,14 @@ if ( ! class_exists( 'E20R\\Utilities\\Utilities' ) ) {
 			}
 			
 		}
+		
+		public function nc_replace( $search, $replacer, $input ) {
+			
+			return preg_replace_callback( "/\b{$search}\b/i", function ( $matches ) use ( $replacer ) {
+				return ctype_lower($matches[0][0]) ? strtolower( $replacer ) : $replacer;
+			}, $input );
+		}
+		
 		
 		/**
 		 * Process REQUEST variable: Check for presence and sanitize it before returning value or default

@@ -20,6 +20,8 @@
 namespace E20R\Roles_For_PMPro;
 
 
+use E20R\Utilities\Cache;
+
 class PMPro_Content_Access {
 	
 	private static $instance = null;
@@ -30,29 +32,59 @@ class PMPro_Content_Access {
 	
 	public static function load() {
 		
-		add_filter( 'pmpro_has_membership_access_filter', array( self::get_instance(), 'has_membership_access' ), 99, 4 );
+		add_filter( 'pmpro_has_membership_access_filter', array(
+			self::get_instance(),
+			'has_membership_access',
+		), 99, 4 );
 	}
 	
 	/**
 	 * Override PMPro based access permissions based on role/capabilities
 	 *
-	 * @param bool $has_access
+	 * @param bool     $has_access
 	 * @param \WP_Post $post
 	 * @param \WP_User $user
-	 * @param array $levels_for_post
+	 * @param array    $levels_for_post
 	 *
 	 * @return bool
 	 *
-	 * @since 1.0
+	 * @since  1.0
 	 * @access public
 	 */
 	public function has_membership_access( $has_access, $post, $user, $levels_for_post ) {
 		
-		if (WP_DEBUG) {
-			error_log("Processing the addon has_access filter(s)");
+		if ( WP_DEBUG ) {
+			error_log( "Processing the addon has_access filter(s)" );
 		}
 		
 		return apply_filters( 'e20r_roles_addon_has_access', $has_access, $post, $user, $levels_for_post );
+	}
+	
+	public static function level_has_post_access( $level_id, $post_id ) {
+		
+		$level_map = array();
+		
+		if ( WP_DEBUG ) {
+			Cache::delete( "has_access_{$level_id}", E20R_Roles_For_PMPro::cache_group );
+		}
+		
+		if ( null === ( $level_map = Cache::get( "has_access_{$level_id}", E20R_Roles_For_PMPro::cache_group ) ) ) {
+			
+			global $wpdb;
+			
+			$sql     = $wpdb->prepare( "SELECT COUNT(membership_id) AS ids FROM {$wpdb->pmpro_memberships_pages} WHERE membership_id = %d AND page_id = %d", $level_id, $post_id );
+			$results = $wpdb->get_var( $sql );
+			
+			if ( 0 != $results ) {
+				
+				$level_map[ $level_id ]   = array();
+				$level_map[ $level_id ][] = $post_id;
+				
+				Cache::set( "has_access_{$level_id}", $level_map, ( 10 * 60 ), E20R_Roles_For_PMPro::cache_group );
+			}
+		}
+		
+		return isset( $level_map[ $level_id ] ) ? in_array( $post_id, $level_map[ $level_id ] ) : false;
 	}
 	
 	/**

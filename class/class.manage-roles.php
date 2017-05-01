@@ -279,9 +279,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 			
 			foreach ( $user_ids as $user_id ) {
 				
-				if ( false === user_can( $user_id, $role_name) ) {
+				$user = get_user_by( 'ID', $user_id );
+				do_action( 'e20r_roles_add_level_role', $role_name, $level_id, $user );
+				
+				if ( false === user_can( $user, $role_name) ) {
 					
-					$user = get_user_by( 'ID', $user_id );
 					$user->add_role( $role_name );
 					
 					if ( WP_DEBUG ) {
@@ -310,6 +312,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				
 				$user = get_user_by( 'ID', $user_id );
 				$user->remove_role( $role_name );
+				
+				do_action( 'e20r_roles_delete_level_role', $role_name, $level_id, $status, $user );
+				
 				$user = null;
 			}
 		}
@@ -332,6 +337,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				
 				$user = get_user_by( 'ID', $user_id );
 				$user->add_role( $role_name );
+				
+				do_action( 'e20r_roles_add_level_role',$role_name, $level_id, $user );
 				
 				return true;
 			} else {
@@ -378,6 +385,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				$user = get_user_by( 'ID', $user_id );
 				$user->remove_role( $role_name );
 				
+				do_action( 'e20r_roles_delete_level_role', $role_name, $level_id, 'active', $user );
 				return true;
 			}
 			
