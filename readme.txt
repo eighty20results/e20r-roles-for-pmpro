@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: pmpro, membership, wordpress roles, bbpress, buddypress
 Requires at least: 4.7
 Tested up to: 4.7.4
-Stable tag: 1.8
+Stable tag: 1.9.1
 =========
 
 Adds a WordPress Role for each Membership Level with Display Name = Membership Level Name and Role Name = 'e20r_roles_level_X' (where X is the Membership Level's ID).
@@ -29,6 +29,27 @@ Requires the BuddyPress plugin if you enable the BuddyPress Roles module (Suppor
  Please report your issue to us by using the (E20R Roles for PMPro)[link="https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/"] Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day.
 
 = Changelog =
+== 1.9.1 ==
+
+* ENHANCEMENT/FIX: Change priority to load the PMPro/Roles access filter handler
+* ENHANCEMENT: Add cache support to the level_has_posts_access() method
+* ENHANCEMENT: Checks whether a level has access to a post ID (without user info)
+* ENHANCEMENT/FIX: No need to check if the forum should be closed by the non-existent permissions of a user who isn't logged in
+* BUG/FIX: Didn't open/close the forum/topic/reply correctly for some users
+* ENHANCEMENT: Add custom filter removal function
+* ENHANCEMENT: Add support for replacing default 'topic(s)' with user specified word(s) in remove_replies_text() and remove_topics_text() methods
+* BUG/FIX: Don't process the post list if the user isn't logged in and they're supposed to be able to see any posts anonymously
+* BUG/FIX: Didn't grant everybody access to the forum & topics when global read access was enabled
+* BUG/FIX: Couldn't always save the correct 'Hide Forums' setting
+* ENHANCEMENT: Refactor 'e20r_roles_addon_has_access' filter handler for bbPress Roles
+
+
+== 1.9 ==
+
+* ENHANCEMENT: Didn't permit search/view of protected forum if global read access was granted
+* ENHANCEMENT: Didn't allow non-members/logged out users to see forums/topics/replies even if anonymous read is permitted
+* ENHANCEMENT: Would sometimes incorrectly deny forum access
+
 == 1.8 ==
 
 * ENHANCEMENT: Add test to avoid redirect loops for forum archive when no access is granted

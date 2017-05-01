@@ -1,3 +1,11 @@
-ENHANCEMENT: Add test to avoid redirect loops for forum archive when no access is granted
-ENHANCEMENT: Now excludes/includes forums, topics and replies from searches if PMPro is configured to do so
-ENHANCEMENT: Load metabox for PMPro membership levels to require for forum(s)
+ENHANCEMENT/FIX: Change priority to load the PMPro/Roles access filter handler
+ENHANCEMENT: Add cache support to the level_has_posts_access() method
+ENHANCEMENT: Checks whether a level has access to a post ID (without user info)
+ENHANCEMENT/FIX: No need to check if the forum should be closed by the non-existent permissions of a user who isn't logged in
+BUG/FIX: Didn't open/close the forum/topic/reply correctly for some users
+ENHANCEMENT: Add custom filter removal function
+ENHANCEMENT: Add support for replacing default "topic(s)" with user specified word(s) in remove_replies_text() and remove_topics_text() methods
+BUG/FIX: Don't process the post list if the user isn't logged in and they're supposed to be able to see any posts anonymously
+BUG/FIX: Didn't grant everybody access to the forum & topics when global read access was enabled
+BUG/FIX: Couldn't always save the correct "Hide Forums" setting
+ENHANCEMENT: Refactor 'e20r_roles_addon_has_access' filter handler for bbPress Roles
