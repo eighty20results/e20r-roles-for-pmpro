@@ -225,9 +225,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$utils->log( "Forum is already closed? " . ( $closed ? 'Yes' : 'No' ) );
 			
 			if ( ! is_user_logged_in() ) {
-			    return $closed;
-            }
-            
+				return $closed;
+			}
+			
 			$user             = wp_get_current_user();
 			$level_permission = $this->get_user_level_perms( $user->ID );
 			$level            = pmpro_getMembershipLevelForUser( $user->ID );
@@ -244,7 +244,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			) {
 				return false;
 			}
-   
+			
 			$user_config_meets_requirement = in_array( $level_permission, $user->get_role_caps() );
 			
 			// User level assigned to the membership level allows add_replies $permission.
@@ -268,7 +268,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			if ( bbp_is_single_forum() ) {
 				
 				$has_perms = in_array( $topic_permission, $user->get_role_caps() );
-				$closed    = ( ( $member_access && $user_config_meets_requirement ) || ( $member_access  && $has_perms ) ? false : true );
+				$closed    = ( ( $member_access && $user_config_meets_requirement ) || ( $member_access && $has_perms ) ? false : true );
 				
 				$utils->log( "Closing topic creation ({$topic_permission}) for {$forum_id}: " . ( $closed ? 'Yes' : 'No' ) );
 				add_filter( 'gettext', array( $this, 'remove_topics_text' ), 10, 3 );
@@ -277,7 +277,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				
 				$has_perms = in_array( $reply_permission, $user->get_role_caps() );
 				// $closed    = ( ( $has_perms && $member_access && $user_config_meets_requirement ) ? false : true );
-				$closed    = ( ( $member_access && $user_config_meets_requirement ) || ( $member_access  && $has_perms ) ? false : true );
+				$closed = ( ( $member_access && $user_config_meets_requirement ) || ( $member_access && $has_perms ) ? false : true );
 				
 				$utils->log( "Closing reply creation ({$reply_permission}) for forum: {$forum_id}: " . ( $closed ? 'Yes' : 'No' ) );
 				add_filter( 'gettext', array( $this, 'remove_replies_text' ), 10, 3 );
@@ -307,32 +307,32 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		private function remove_from_filters( $hook, $priority ) {
-   
+			
 			$utils = Utilities::get_instance();
-   
+			
 			global $wp_filter;
 			
 			if ( ! isset( $wp_filter[ $hook ] ) ) {
-			    return;
-            }
-            
+				return;
+			}
+			
 			$pmpro_access_funcs = $wp_filter[ $hook ]->callbacks[ $priority ];
 			
 			foreach ( $pmpro_access_funcs as $key => $data ) {
 				
 				$class_name = get_class( $pmpro_access_funcs[ $key ]['function'][0] );
-    
+				
 				if ( false != preg_match( '/bbPress_Roles/', $class_name ) ) {
-     
+					
 					unset( $wp_filter[ $hook ]->callbacks[ $priority ][ $key ] );
 					if ( empty( $wp_filter[ $hook ]->callbacks[ $priority ] ) ) {
-					    unset( $wp_filter[ $hook ]->callbacks[ $priority ] );
-                    }
-                    
-                    if ( empty( $wp_filter[ $hook ]->callbacks ) ) {
-					    unset( $wp_filter[$hook] );
-                    }
-                }
+						unset( $wp_filter[ $hook ]->callbacks[ $priority ] );
+					}
+					
+					if ( empty( $wp_filter[ $hook ]->callbacks ) ) {
+						unset( $wp_filter[ $hook ] );
+					}
+				}
 				
 				// $utils->log( "Removed {$hook} [{$priority}] hook(s) for {$class_name}/{$key}? " . ( empty( $wp_filter[ $hook ]->callbacks[ $priority ][ $key ] ) ? 'Yes' : 'No' ) );
 			}
@@ -710,15 +710,38 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					
 					delete_post_meta( $forum_id, 'e20r_bbpress_access_levels' );
 					
-					foreach ( $new_levels as $level_id ) {
-						
-						$utils->log( "Adding level {$level_id} as 'protected' by the {$forum_id} forum" );
-						add_post_meta( $forum_id, 'e20r_bbpress_access_levels', $level_id );
+					$this->add_levels_to_meta( $forum_id, $new_levels );
+					
+					$check_levels = get_post_meta( $forum_id, 'e20r_bbpress_access_levels' );
+					$from_db      = PMPro_Content_Access::get_post_levels( $forum_id, true );
+					
+					$diff = array_diff( $check_levels, $from_db );
+					
+					if ( ! empty( $diff ) ) {
+						$this->add_levels_to_meta( $forum_id, $from_db );
 					}
+					
 				}
 			}
 			
 			return $forum_id;
+		}
+		
+		/**
+		 * Add list of membership levels protecting it to the Post's metadata table
+		 *
+		 * @param int   $post_id
+		 * @param array $levels
+		 */
+		private function add_levels_to_meta( $post_id, $levels ) {
+			
+			$utils = Utilities::get_instance();
+			
+			foreach ( $levels as $level_id ) {
+				
+				$utils->log( "Adding level {$level_id} as 'protected' by the {$post_id} forum" );
+				add_post_meta( $post_id, 'e20r_bbpress_access_levels', $level_id );
+			}
 		}
 		
 		/**
@@ -733,10 +756,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$utils = Utilities::get_instance();
 			
-			if ( !is_user_logged_in() && $this->allow_anon_read() ) {
-			    return $posts;
-            }
-            
+			if ( ! is_user_logged_in() && $this->allow_anon_read() ) {
+				return $posts;
+			}
+			
 			$filtered_posts = array();
 			$user_id        = get_current_user_id();
 			$utils->log( "Checking access for " . count( $posts ) . " posts" );
@@ -2451,8 +2474,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
-         * Add "member levels" header to the "Forums" listing page
-         *
+		 * Add "member levels" header to the "Forums" listing page
+		 *
 		 * @param array $headers
 		 *
 		 * @return array
@@ -2460,44 +2483,54 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		public function set_forum_column_header( $headers ) {
 			
 			$utils = Utilities::get_instance();
-		 
+			
 			if ( function_exists( 'pmpro_getLevel' ) ) {
 				$headers['e20r_bbp_levels'] = __( "Member Levels", E20R_Roles_For_PMPro::plugin_slug );
 			}
-		    return $headers;
-        }
+			
+			return $headers;
+		}
 		
 		/**
-         * Fetch & print the membership level(s) that apply to the forum on the listing row
-         *
+		 * Fetch & print the membership level(s) that apply to the forum on the listing row
+		 *
 		 * @param string $column
-		 * @param int $post_id
+		 * @param int    $post_id
 		 */
-        public function level_column_content( $column, $post_id ) {
-        
-		    $utils = Utilities::get_instance();
-	     
-		    if ( 'e20r_bbp_levels' == $column && function_exists( 'pmpro_getLevel' ) ) {
-		        
-                $utils->log("Loading column data for {$column}/{$post_id}");
-                $level_ids = get_post_meta( $post_id, 'e20r_bbpress_access_levels' );
-                $names = array();
-			    foreach( $level_ids as $level_id ) {
+		public function level_column_content( $column, $post_id ) {
+			
+			$utils = Utilities::get_instance();
+			
+			if ( 'e20r_bbp_levels' == $column && function_exists( 'pmpro_getLevel' ) ) {
 				
-				    $level = pmpro_getLevel( $level_id );
-				    if ( !empty( $level->id ) ) {
-					    $names[] = $level->name;
-				    }
-                }
+				$utils->log( "Loading column data for {$column}/{$post_id}" );
 				
-                $separator = apply_filters( 'e20r_roles_addon_bbpress_forum_list_separator', '<br/>' );
-				    ?>
+				$m_level_ids = get_post_meta( $post_id, 'e20r_bbpress_access_levels' );
+				$level_ids   = PMPro_Content_Access::get_post_levels( $post_id );
+				$diff        = array_diff( $m_level_ids, $level_ids );
+				
+				if ( ! empty( $diff ) ) {
+					update_post_meta( $post_id, 'e20r_bbpress_access_levels', $level_ids );
+				}
+				
+				$names = array();
+				foreach ( $level_ids as $level_id ) {
+					
+					$level = pmpro_getLevel( $level_id );
+					
+					if ( ! empty( $level->id ) ) {
+						$names[] = $level->name;
+					}
+				}
+				
+				$separator = apply_filters( 'e20r_roles_addon_bbpress_forum_list_separator', '<br/>' );
+				?>
                 <div class="e20r-bbpress-levels">
-                <?php echo ( !empty( $names ) ? implode( $separator, $names ) : __( "Not specified", E20R_Roles_For_PMPro::plugin_slug ) ); ?>
+				<?php echo( ! empty( $names ) ? implode( $separator, $names ) : __( "Not specified", E20R_Roles_For_PMPro::plugin_slug ) ); ?>
                 </div><?php
-            }
-        }
-        
+			}
+		}
+		
 		/**
 		 * Fetch the properties for bbPress
 		 *
@@ -2651,7 +2684,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				
 				add_action( 'init', array( self::get_instance(), 'clear_blocked' ) );
 				add_action( 'template_redirect', array( self::get_instance(), 'restrict_forums' ) );
-    
+				
 				/**
 				 * Membership related settings for role(s) add-on
 				 */
@@ -2701,7 +2734,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				if ( function_exists( 'pmpro_getOption' ) ) {
 					
 					$filter_queries = pmpro_getOption( 'filterqueries' );
-					$utils->log("Filter searches/queries? " . ( $filter_queries ? 'Yes' : 'No') );
+					$utils->log( "Filter searches/queries? " . ( $filter_queries ? 'Yes' : 'No' ) );
 					
 					if ( true == $filter_queries ) {
 						add_filter( 'pre_get_posts', array( self::get_instance(), 'pre_get_posts' ) );
@@ -2712,13 +2745,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					self::get_instance(),
 					'add_user_role_to_list',
 				), 20, 3 );
-    
+				
 				// add_filter( 'the_content', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				// add_filter( 'the_excerpt', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				
 				$hide_member_forums = self::get_instance()->load_option( 'hide_member_forums' );
 				
-				$utils->log("Hide member forums? " . ( $hide_member_forums ? 'Yes' : 'No') );
+				$utils->log( "Hide member forums? " . ( $hide_member_forums ? 'Yes' : 'No' ) );
 				
 				if ( true == $hide_member_forums ) {
 					
@@ -2729,10 +2762,16 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					) );
 				}
 				
-				add_action( 'save_post_forum', array( self::get_instance(), 'save_forum_protection' ), 15 );
+				add_action( 'save_post_forum', array( self::get_instance(), 'save_forum_protection' ), 99 );
 				
-				add_filter( 'manage_forum_posts_columns', array( self::get_instance(), 'set_forum_column_header' ), 99 );
-				add_action( 'manage_forum_posts_custom_column', array( self::get_instance(), 'level_column_content' ), 10, 2 );
+				add_filter( 'manage_forum_posts_columns', array(
+					self::get_instance(),
+					'set_forum_column_header',
+				), 99 );
+				add_action( 'manage_forum_posts_custom_column', array(
+					self::get_instance(),
+					'level_column_content',
+				), 10, 2 );
 				
 				self::get_instance()->configure_forum_admin_capabilities();
 			}
