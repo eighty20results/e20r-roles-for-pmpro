@@ -117,7 +117,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			$this->define_settings();
 		}
 		
-		private function get_class_name() {
+		public function get_class_name() {
 			
 			if ( empty( $this->class_name ) ) {
 				$this->class_name = $this->maybe_extract_class_name( get_class( self::$instance ) );
