@@ -20,6 +20,7 @@
 namespace E20R\Roles_For_PMPro;
 
 
+use E20R\Roles_For_PMPro\Addon\E20R_Roles_Addon;
 use E20R\Utilities\Cache;
 
 class PMPro_Content_Access {
@@ -58,6 +59,37 @@ class PMPro_Content_Access {
 		}
 		
 		return apply_filters( 'e20r_roles_addon_has_access', $has_access, $post, $user, $levels_for_post );
+	}
+	
+	/**
+	 * Return all level IDs that protect the post ID
+	 *
+	 * @param int  $post_id
+	 * @param bool $force
+	 *
+	 * @return array
+	 */
+	public static function get_post_levels( $post_id, $force = false ) {
+		
+		$post_levels = array();
+		
+		if ( WP_DEBUG || true === $force ) {
+			Cache::delete( "post_levels_{$post_id}", E20R_Roles_For_PMPro::cache_group );
+		}
+		
+		if ( null === ( $post_levels = Cache::get( "post_levels_{$post_id}", E20R_Roles_For_PMPro::cache_group ) ) ) {
+			
+			global $wpdb;
+			
+			$sql         = $wpdb->prepare( "SELECT membership_id FROM {$wpdb->pmpro_memberships_pages} WHERE page_id = %d", $post_id );
+			$post_levels = $wpdb->get_col( $sql );
+			
+			if ( ! empty( $post_levels ) ) {
+				Cache::set( "post_levels_{$post_id}", $post_levels, HOUR_IN_SECONDS, E20R_Roles_For_PMPro::cache_group );
+			}
+		}
+		
+		return $post_levels;
 	}
 	
 	public static function level_has_post_access( $level_id, $post_id ) {
