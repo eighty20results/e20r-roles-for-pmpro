@@ -25,13 +25,10 @@ use E20R\Utilities\Cache;
 use E20R\Utilities\Utilities;
 use E20R\Licensing;
 
-define( 'ADDON_STUB', 'example-add-on' );
-define( 'ADDON_NAME', 'Example Add-on for Roles' );
-
-if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
+if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 	
 	class Example_Addon extends E20R_Roles_Addon {
-		
+	    
 		const CAN_ACCESS = 'can_access';
 		const CAN_READ = 'can_read';
 		const CAN_EDIT = 'can_edit';
@@ -103,8 +100,15 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
 		 */
 		private $_forum_admin_capabilities = array();
 		
+		public function set_stub_name( $name = null ) {
+			
+		    $name = strtolower( $this->get_class_name() );
+			return $name;
+		}
+		
+		
 		/**
-		 * BuddyPress_Roles constructor.
+		 *  Example_Addon constructor.
 		 */
 		protected function __construct() {
 			
@@ -128,9 +132,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
 		
 		private function maybe_extract_class_name( $string ) {
 			
-			if ( WP_DEBUG ) {
-				error_log( "Supplied (potential) class name: {$string}" );
-			}
+		    $utils = Utilities::get_instance();
+            $utils->log( "Supplied (potential) class name: {$string}" );
 			
 			$class_array = explode( '\\', $string );
 			$name        = $class_array[ ( count( $class_array ) - 1 ) ];
@@ -148,11 +151,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
 			$class      = self::get_instance();
 			$utils      = Utilities::get_instance();
 			$class_name = $class->get_class_name();
-			
-			if ( WP_DEBUG ) {
-				error_log( "Loading the {$class_name} class action(s) " );
-			}
-			
+            
+            $utils->log( "Loading the {$class_name} class action(s) " );
+            
 			global $e20r_roles_addons;
 			
 			if ( is_null( $stub ) ) {
@@ -457,7 +458,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
 			$utils = Utilities::get_instance();
 			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
 			
-			if ( ADDON_STUB !== $addon ) {
+			$expected_stub = strtolower( $this->get_class_name() );
+			
+			if ( $expected_stub !== $addon ) {
 				$utils->log( "Not processing the {$e20r_roles_addons[$addon]['label']} add-on: {$addon}" );
 				
 				return;
@@ -513,6 +516,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
 			$utils = Utilities::get_instance();
 			global $e20r_roles_addons;
 			
+			// TODO: Set the filter name to match the sub for this plugin.
+   
 			/**
 			 * Toggle ourselves on/off, and handle any deactivation if needed.
 			 */
@@ -565,7 +570,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
 		 */
 		public static function configure_addon() {
 			
-			parent::is_enabled( ADDON_STUB );
+			$class = self::get_instance();
+			$name  = strtolower( $class->get_class_name() );
+
+			parent::is_enabled( $name );
 		}
 		
 		/**
@@ -1071,27 +1079,28 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\Example_Addon' ) ) {
 			return self::$instance;
 		}
 	}
-	
-	// Configure the add-on (global settings array)
-	global $e20r_roles_addons;
-	$stub = strtolower( ADDON_STUB );
-	
-	$e20r_roles_addons[ $stub ] = array(
-		'class_name'            => 'Example_Addon',
-		'is_active'             => false, // ( get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
-		'status'                => 'deactivated',
-		'label'                 => 'Roles: Example Add-on',
-		'admin_role'            => 'manage_options',
-		'required_plugins_list' => array(
-			'buddypress/buddypress.php'                     => array(
-				'name' => 'BuddyPress',
-				'url'  => 'https://wordpress.org/plugins/buddypress/',
-			),
-			'paid-memberships-pro/paid-memberships-pro.php' => array(
-				'name' => 'Paid Memberships Pro',
-				'url'  => 'https://wordpress.org/plugins/paid-memberships-pro/',
-			),
-		),
-	);
-	
 }
+
+add_filter( "e20r_roles_addon_example_addon_name", array( Example_Addon::get_instance(), 'set_stub_name' ) );
+
+// Configure the add-on (global settings array)
+global $e20r_roles_addons;
+$stub = apply_filters( "e20r_roles_addon_example_addon_name", null );
+
+$e20r_roles_addons[ $stub ] = array(
+	'class_name'            => 'Example_Addon',
+	'is_active'             => false, // ( get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
+	'status'                => 'deactivated',
+	'label'                 => 'Roles: Example Add-on',
+	'admin_role'            => 'manage_options',
+	'required_plugins_list' => array(
+		'buddypress/buddypress.php'                     => array(
+			'name' => 'BuddyPress',
+			'url'  => 'https://wordpress.org/plugins/buddypress/',
+		),
+		'paid-memberships-pro/paid-memberships-pro.php' => array(
+			'name' => 'Paid Memberships Pro',
+			'url'  => 'https://wordpress.org/plugins/paid-memberships-pro/',
+		),
+	),
+);
