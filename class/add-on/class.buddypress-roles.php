@@ -103,6 +103,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 		 */
 		private $_forum_admin_capabilities = array();
 		
+		public function set_stub_name( $name = null ) {
+			
+			$name = strtolower( $this->get_class_name() );
+			
+			return $name;
+		}
+		
 		/**
 		 * BuddyPress_Roles constructor.
 		 */
@@ -201,7 +208,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			return $settings;
 		}
-  
+		
 		/**
 		 * Can the user access the post(s) in the forum(s)
 		 *
@@ -424,7 +431,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			Cache::delete( self::CAN_ACCESS );
 		}
-  
+		
 		/**
 		 * Return a specific type of capabilities
 		 *
@@ -488,7 +495,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			return $mapped;
 		}
-  
+		
 		/**
 		 * Filter Handler: Access filter for bbPress/PMPro memership (override)
 		 *
@@ -670,7 +677,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			$utils = Utilities::get_instance();
 			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
 			
-			if ( ADDON_STUB !== $addon ) {
+			$expected_stub = strtolower( $this->get_class_name() );
+			
+			if ( $expected_stub !== $addon ) {
 				$utils->log( "Not processing the {$e20r_roles_addons[$addon]['label']} add-on: {$addon}" );
 				
 				return;
@@ -767,7 +776,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 					self::get_instance(),
 					'delete_level_settings',
 				), 10, 2 );
-    
+				
 				// self::get_instance()->configure_forum_admin_capabilities();
 			}
 		}
@@ -778,7 +787,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 		 */
 		public static function configure_addon() {
 			
-			parent::is_enabled( ADDON_STUB );
+			$class = self::get_instance();
+			$name  = strtolower( $class->get_class_name() );
+			
+			parent::is_enabled( $name );
 		}
 		
 		/**
@@ -1066,7 +1078,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
             </table>
 			<?php
 		}
-  
+		
 		/**
 		 * Test whether the specified role has all of the required capabilities (based on the type)
 		 *
@@ -1288,27 +1300,27 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			return self::$instance;
 		}
 	}
-	
-	// Configure the add-on (global settings array)
-	global $e20r_roles_addons;
-	$stub = strtolower( ADDON_STUB );
-	
-	$e20r_roles_addons[ $stub ] = array(
-		'class_name'            => 'BuddyPress_Roles',
-		'is_active'             => false, // ( get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
-		'status'                => 'deactivated',
-		'label'                 => 'BuddyPress Roles',
-		'admin_role'            => 'manage_options',
-		'required_plugins_list' => array(
-			'buddypress/buddypress.php'                     => array(
-				'name' => 'BuddyPress',
-				'url'  => 'https://wordpress.org/plugins/buddypress/',
-			),
-			'paid-memberships-pro/paid-memberships-pro.php' => array(
-				'name' => 'Paid Memberships Pro',
-				'url'  => 'https://wordpress.org/plugins/paid-memberships-pro/',
-			),
-		),
-	);
-	
 }
+
+// Configure the add-on (global settings array)
+global $e20r_roles_addons;
+add_filter( "e20r_roles_addon_buddypress_roles_name", array( BuddyPress_Roles::get_instance(), 'set_stub_name' ) );
+$stub = apply_filters( "e20r_roles_addon_buddypress_roles_name", null );
+
+$e20r_roles_addons[ $stub ] = array(
+	'class_name'            => 'BuddyPress_Roles',
+	'is_active'             => false, // ( get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
+	'status'                => 'deactivated',
+	'label'                 => 'BuddyPress Roles',
+	'admin_role'            => 'manage_options',
+	'required_plugins_list' => array(
+		'buddypress/buddypress.php'                     => array(
+			'name' => 'BuddyPress',
+			'url'  => 'https://wordpress.org/plugins/buddypress/',
+		),
+		'paid-memberships-pro/paid-memberships-pro.php' => array(
+			'name' => 'Paid Memberships Pro',
+			'url'  => 'https://wordpress.org/plugins/paid-memberships-pro/',
+		),
+	),
+);
