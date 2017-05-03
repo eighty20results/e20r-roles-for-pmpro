@@ -1,1 +1,8 @@
-ENHANCEMENT: Add column showing membership level required to perform member based permissions
+ENHANCEMENT: Add function to retrieve all membership levels that are required by the post ID
+ENHANCEMENT: Refactor for WordPress code style
+ENHANCEMENT: Reduce code duplication
+ENHANCEMENT: Make add-on load/init/handling more generic for BuddyPress add-on
+ENHANCEMENT: Adding an example add-on module
+ENHANCEMENT/FIX: Make example add-on more generic in class/config handling
+ENHANCEMENT/FIX: Load level info from the PMPro table for the forum/level column
+BUG/FIX: Error while configuring the BuddyPress add-on

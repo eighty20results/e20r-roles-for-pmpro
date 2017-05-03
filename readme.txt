@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: pmpro, membership, wordpress roles, bbpress, buddypress
 Requires at least: 4.7
 Tested up to: 4.7.4
-Stable tag: 1.9.2
+Stable tag: 1.9.3
 =========
 
 Adds a WordPress Role for each Membership Level with Display Name = Membership Level Name and Role Name = 'e20r_roles_level_X' (where X is the Membership Level's ID).
@@ -29,6 +29,17 @@ Requires the BuddyPress plugin if you enable the BuddyPress Roles module (Suppor
  Please report your issue to us by using the (E20R Roles for PMPro)[link="https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/"] Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day.
 
 = Changelog =
+== 1.9.3 ==
+
+* ENHANCEMENT: Add function to retrieve all membership levels that are required by the post ID
+* ENHANCEMENT: Refactor for WordPress code style
+* ENHANCEMENT: Reduce code duplication
+* ENHANCEMENT: Make add-on load/init/handling more generic for BuddyPress add-on
+* ENHANCEMENT: Adding an example add-on module
+* ENHANCEMENT/FIX: Make example add-on more generic in class/config handling
+* ENHANCEMENT/FIX: Load level info from the PMPro table for the forum/level column
+* BUG/FIX: Error while configuring the BuddyPress add-on
+
 == 1.9.2 ==
 
 * ENHANCEMENT: Add column showing membership level required to perform member based permissions
