@@ -194,10 +194,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		 * @access public
 		 *
 		 */
-		public function after_change_membership_level( $user_id, $level_id, $cancel_level_id = null ) {
+		public function after_change_membership_level( $level_id, $user_id, $cancel_level_id = null ) {
+			
+			$utils = Utilities::get_instance();
 			
 			// Process membership level cancellation (if level ID = 0 (aka empty)
 			if ( empty( $level_id ) || 0 === $level_id ) {
+				
+				$utils->log("Cancelling all specified mebership level IDs for {$user_id}");
 				
 				if ( empty( $cancel_level_id ) ) {
 					
@@ -206,6 +210,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 					$last_order->getLastMemberOrder( $user_id, 'success' );
 					
 					$level_id_to_cancel = $last_order->membership_id;
+					
+					$utils->log("Grabbed cancel level ID while assuming there's an order.. ({$level_id_to_cancel})");
 				} else {
 					
 					// Using the supplied cancel_level_id
@@ -222,8 +228,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 					if ( false === $this->remove_role_for_user( $user_id, $role_name, $level_id_to_cancel ) ) {
 						
 						// Oops. Something went wrong during the role removal. Notify admin.
-						$utils = Utilities::get_instance();
-						
 						$old_level = pmpro_getLevel( $level_id_to_cancel );
 						$utils->add_message(
 							sprintf(
@@ -240,19 +244,30 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 			// Check if we need to add the new role to the user ID
 			$role_name = Manage_Roles::role_key . $level_id;
 			
+			$utils->log("Using the following role name: {$role_name}");
+			
 			if ( false === $this->has_role( $user_id, $role_name ) ) {
+				
+				$utils->log("User lacks the specified role");
 				
 				// We do, so do it.
 				if ( false === $this->add_role_to_user( $user_id, $role_name, $level_id ) ) {
 					
-					// Oops, something went sideways. Let the admin know.
-					$utils = Utilities::get_instance();
+					$utils->log("Unable to add the {$role_name} role to {$user_id} for {$level_id}");
 					
+					// Oops, something went sideways. Let the admin know.
 					$level = pmpro_getLevel( $level_id );
+					
+					if ( empty( $level ) ) {
+						$level_name = sprintf( __( "Not found [%d]", E20R_Roles_For_PMPro::plugin_slug ), $level_id );
+					} else {
+						$level_name = $level->name;
+					}
+					
 					$utils->add_message(
 						sprintf(
-							__( 'Unable to add the %1$s membership level role for user ID: %2$d', E20R_Roles_For_PMPro::plugin_slug ),
-							esc_html__( $level->name ),
+							__( 'Unable to add the "%1$s" membership level role for user ID: %2$d', E20R_Roles_For_PMPro::plugin_slug ),
+							esc_html__( $level_name ),
 							$user_id
 						),
 						'warning'
