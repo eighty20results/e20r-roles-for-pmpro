@@ -35,6 +35,7 @@ use E20R\Licensing\Licensing;
 use E20R\Roles_For_PMPro\Manage_Roles;
 use E20R\Roles_For_PMPro\Addon;
 use E20R\Utilities\Cache;
+use E20R\Utilities\PMPro_Members;
 use E20R\Utilities\Utilities;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -138,7 +139,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			), 10, 2 );
 			
 			add_action( 'pmpro_after_change_membership_level', array(
-				Manage_Roles::get_instance(),
+				PMPro_Members::get_instance(),
 				'update_list_of_level_members',
 			), 99, 2 );
 			
