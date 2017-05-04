@@ -62,7 +62,7 @@ if ( ! class_exists( 'E20R\\Utilities\\Cache' ) ) {
 		 * Store entry in cache
 		 *
 		 * @param string $key
-		 * @param string $value
+		 * @param mixed $value
 		 * @param int    $expires
 		 * @param string $group
 		 *
