@@ -2575,17 +2575,20 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				'capabilities' => $use_caps,
 			);
 			
-			foreach ( $level_settings as $level_id => $settings ) {
-				
-				$level = pmpro_getLevel( $level_id );
-				
-				if ( ! empty( $level ) ) {
-					$utils->log( "Adding role definition for {$level->name}" );
+			if ( ! empty( $level_settings ) ) {
+    
+				foreach ( $level_settings as $level_id => $settings ) {
 					
-					$bbp_role_defs["e20r_bbpress_level_{$level_id}_access"] = array(
-						'name'         => $level->name,
-						'capabilities' => $settings['capabilities'],
-					);
+					$level = pmpro_getLevel( $level_id );
+					
+					if ( ! empty( $level ) ) {
+						$utils->log( "Adding role definition for {$level->name}" );
+						
+						$bbp_role_defs["e20r_bbpress_level_{$level_id}_access"] = array(
+							'name'         => $level->name,
+							'capabilities' => $settings['capabilities'],
+						);
+					}
 				}
 			}
 			
