@@ -198,6 +198,16 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			// License not validated
 			if ( ! isset( $decoded->result ) || 'success' != $decoded->result ) {
 				
+			    global $e20r_roles_addons;
+			    
+			    if ( isset( $e20r_roles_addons[$product] ) ) {
+			        $name = $e20r_roles_addons['label'];
+                } else if ( isset( $settings['fulltext_name'] ) ) {
+			        $name = $settings['fulltext_name'];
+                } else {
+			        $name = "Unidentified";
+                }
+                
 				$msg = sprintf( __( "Sorry, no valid license found for: %s", self::$text_domain ), $settings['fulltext_name'] );
 				$utils->log( $msg );
 				$utils->add_message( $msg, 'error' );
@@ -680,7 +690,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 						?>
                         <div class="notice notice-error inline">
                         <p>
-                            <strong><?php printf( __( 'Your <em>%s</em> license is invalid or has expired.', self::$text_domain ), $license['fulltext_name'] ); ?></strong>
+                            <strong><?php printf( __( 'Your <em>%s</em> license is either not configured, invalid or has expired.', self::$text_domain ), $license['fulltext_name'] ); ?></strong>
 							<?php printf( __( 'Visit your Eighty / 20 Results <a href="%s" target="_blank">Support Account</a> page to confirm that your account is active and to locate your license key.', self::$text_domain ), $support_account_url ); ?>
                         </p>
                         </div><?php
