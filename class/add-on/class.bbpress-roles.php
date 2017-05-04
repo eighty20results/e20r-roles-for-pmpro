@@ -2662,6 +2662,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				'capabilities' => $use_caps,
 			);
 			
+			$bbp_role_defs['unproteced_forum'] = array(
+                'name' => "Add Topics/Replies to forums w/o Membership level protection",
+                'capabilities' => $this->select_capabilities( 'add_topics' )
+            );
+			
 			if ( ! empty( $level_settings ) ) {
 				
 				foreach ( $level_settings as $level_id => $settings ) {
