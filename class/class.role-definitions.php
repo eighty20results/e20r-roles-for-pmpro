@@ -148,15 +148,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 		 */
 		public function reset_level_role( $level_id ) {
 			
+			$utils = Utilities::get_instance();
+			
 			$role_name = Manage_Roles::role_key . $level_id;
 			$role_def  = false;
 			
 			// Get the current settings (if they exist).
 			$this->level_settings = $this->get_level_options( $level_id );
-			
-			if ( WP_DEBUG ) {
-				error_log( "Current Level settings for {$level_id}: " . print_r( $this->level_settings, true ) );
-			}
+			$utils->log( "Current Level settings for {$level_id}: " . print_r( $this->level_settings, true ) );
 			
 			$default_capabilities = self::default_capabilities();
 			
@@ -177,9 +176,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			// Save the capabilities
 			$this->level_settings['capabilities'] = array_unique( $capabilities );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Testing if {$role_name} exists/is defined" );
-			}
+			$utils->log( "Testing if {$role_name} exists/is defined" );
 			
 			if ( false === $this->role_exists( $role_name ) ) {
 				
@@ -191,18 +188,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			
 			if ( empty( $role_def ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Unable to add role {$role_name} while in reset_level_role()" );
-				}
-				
+				$utils->log( "Unable to add role {$role_name} while in reset_level_role()" );
 				return false;
 			}
 			
 			$existing_caps = $role_def->capabilities;
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current capabilities assigned to {$role_name}: " . print_r( $existing_caps, true ) );
-			}
+			$utils->log( "Current capabilities assigned to {$role_name}: " . print_r( $existing_caps, true ) );
 			
 			// Removing all existing capabilities from the role (we're resetting, remember!?!)
 			foreach ( $existing_caps as $cap => $state ) {
@@ -211,9 +203,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 				
 				if ( ! in_array( $cap, $defaults ) ) {
 					
-					if ( WP_DEBUG ) {
-						error_log( "Removing {$cap} from role {$role_name}" );
-					}
+					$utils->log( "Removing {$cap} from role {$role_name}" );
 					
 					$role_def->remove_cap( $cap );
 				}
@@ -222,10 +212,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			// Add the required/requested capabilities
 			foreach ( $this->level_settings['capabilities'] as $capability ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Adding {$capability} to role {$role_name}" );
-				}
-				
+				$utils->log( "Adding {$capability} to role {$role_name}" );
 				$role_def->add_cap( $capability );
 			}
 			
@@ -249,9 +236,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 		 */
 		public function add_level_role( $level_id ) {
 			
-			if ( WP_DEBUG ) {
-				error_log( "Adding role to level {$level_id} if needed" );
-			}
+			$utils = Utilities::get_instance();
+			$utils->log( "Adding role to level {$level_id} if needed" );
 			
 			$this->level_settings = $this->get_level_options( $level_id );
 			$manager              = Manage_Roles::get_instance();
@@ -273,9 +259,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 					$utils = Utilities::get_instance();
 					$utils->add_message( $error_message, 'error' );
 					
-					if ( WP_DEBUG ) {
-						error_log( "Unable to add {$role_name} to system for {$level_id}: {$error_message}" );
-					}
+					$utils->log( "Unable to add {$role_name} to system for {$level_id}: {$error_message}" );
 					
 					return false;
 				}
@@ -297,6 +281,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 		 */
 		public function delete_level_role( $level_id ) {
 			
+			$utils = Utilities::get_instance();
 			$role_name = Manage_Roles::role_key . $level_id;
 			
 			// Find users with the role name assigned to them
@@ -306,15 +291,15 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 				)
 			);
 			
-			if ( WP_DEBUG ) {
-				error_log( 'Result: ' . $user_query->get_total() . " users found" );
-			}
+			$utils->log( 'Result: ' . $user_query->get_total() . " users found" );
 			
 			if ( ! empty( $user_query->get_results() ) ) {
 				
+				$users = $user_query->get_results();
 				// Remove the role from all users
-				foreach ( $user_query->get_results() as $user ) {
+				foreach ( $users as $user ) {
 					
+					$utils->log("Removing {$role_name} for {$user->ID}");
 					$user->remove_role( $role_name );
 				}
 			}
