@@ -79,139 +79,56 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		 *
 		 * @action pmpro_after_checkout
 		 *
-		 * @param int         $user_id
-		 * @param MemberOrder $order_class
+		 * @param int          $user_id
+		 * @param \MemberOrder $order_class
 		 *
 		 * @since  1.0
 		 * @access public
 		 */
+		/*
 		public function update_user_role_at_checkout( $user_id, $order_class ) {
 			
 			$role_name = Manage_Roles::role_key . $order_class->membership_id;
 			
 			if ( false === $this->has_role( $user_id, $role_name ) ) {
 				
-				$user = get_user_by( 'ID', $user_id );
-				$user->add_role( $role_name );
+				$this->add_role_to_user( $user_id, $role_name,$order_class->membership_id );
 			}
 			
 			// reset the Memberships cache
-			
+			PMPro_Members::clear_all_caches();
 		}
+		*/
 		
 		/**
-		 * Remove level to cancel if needed and add old levels if not already assigned
+		 * Clear membership level roles being removed
 		 *
-		 * @action pmpro_before_change_level
-		 *
-		 * @param int   $level_id           New level being changed to
-		 * @param int   $user_id            User's ID
-		 * @param array $old_levels         List of active levels the user belongs to (currently)
-		 * @param int   $level_id_to_cancel The membership level being changed from
-		 *
-		 * @since  1.0
-		 */
-		public function before_change_membership_level( $level_id, $user_id, $old_levels, $level_id_to_cancel ) {
-			
-			$utils = Utilities::get_instance();
-			
-			// Process existing levels & fix any missing role assignments for this user
-			foreach ( $old_levels as $ol ) {
-				
-				$role_name = Manage_Roles::role_key . $ol->id;
-				
-				// Remove the membership role from the user ID if assigned (backwards compatibility)
-				if ( false === $this->has_role( $user_id, $role_name ) ) {
-					
-					// Return error message to the WP-Admin dashboard if failing to add role(s)
-					if ( false === $this->add_role_to_user( $user_id, $role_name, $ol->id ) ) {
-						
-						$utils->add_message(
-							sprintf(
-								__( 'Unable to add the %1$s membership level role for user %2$d', E20R_Roles_For_PMPro::plugin_slug ),
-								esc_html__( $ol->name ),
-								$user_id
-							),
-							'warning'
-						);
-					}
-				}
-			}
-			
-			// Figure out if we're supposed to _NOT_ deactivate the old level(s).
-			$deactivate_old_levels = apply_filters( 'pmpro_deactivate_old_levels', true );
-			
-			// Remove any old level roles if we're supposed to be deactviating the level
-			if ( ! empty( $level_id_to_cancel ) && true === $deactivate_old_levels ) {
-				
-				$role_name = Manage_Roles::role_key . $level_id_to_cancel;
-				
-				if ( true === $this->has_role( $user_id, $role_name ) ) {
-					
-					if ( false === $this->remove_role_for_user( $user_id, $role_name, $level_id_to_cancel ) ) {
-						
-						$old_level = pmpro_getLevel( $level_id_to_cancel );
-						$utils->add_message(
-							sprintf(
-								__( 'Unable to remove the %1$s membership level role for user ID: %2$d', E20R_Roles_For_PMPro::plugin_slug ),
-								esc_html__( $old_level->name ),
-								$user_id
-							),
-							'warning'
-						);
-					}
-				}
-			}
-			
-			$role_name = Manage_Roles::role_key . $level_id;
-			
-			// Add the new membership role if not already assigned
-			if ( false === $this->has_role( $user_id, $role_name ) ) {
-				
-				if ( false === $this->add_role_to_user( $user_id, $role_name, $level_id ) ) {
-					
-					$level = pmpro_getLevel( $level_id );
-					$utils->add_message(
-						sprintf(
-							__( 'Unable to add the %1$s membership level role for user ID: %2$d', E20R_Roles_For_PMPro::plugin_slug ),
-							esc_html__( $level->name ),
-							$user_id
-						),
-						'warning'
-					);
-				}
-			}
-		}
-		
-		/**
-		 * Process membership level roles after the user's membership level has been changed
+		 * @filter pmpro_before_change_membership_level
 		 *
 		 * @param int      $user_id         The WordPress user ID
 		 * @param int      $level_id        The PMPro Membership Level ID the user is being changed to
+		 * @param array    $existing_levels
 		 * @param null|int $cancel_level_id The PMPro  Membership Level ID the user being cancelled
 		 *
 		 * @since  1.0
 		 * @access public
 		 *
 		 */
-		public function after_change_membership_level( $level_id, $user_id, $cancel_level_id = null ) {
+		public function before_change_membership_level( $level_id, $user_id, $existing_levels, $cancel_level_id = null ) {
 			
 			$utils = Utilities::get_instance();
 			
 			// Process membership level cancellation (if level ID = 0 (aka empty)
 			if ( empty( $level_id ) || 0 === $level_id ) {
 				
-				$utils->log("Cancelling all specified mebership level IDs for {$user_id}");
+				$utils->log( "Cancelling all specified mebership level IDs for {$user_id}" );
 				
 				if ( empty( $cancel_level_id ) ) {
 					
 					// Use the order table to locate the most recent membership level id
-					$last_order = new \MemberOrder();
-					$last_order->getLastMemberOrder( $user_id, 'success' );
+					$level_id_to_cancel = PMPro_Members::get_previous_membership_level( $user_id );
 					
-					$level_id_to_cancel = $last_order->membership_id;
-					
-					$utils->log("Grabbed cancel level ID while assuming there's an order.. ({$level_id_to_cancel})");
+					$utils->log( "Grabbed cancel level ID while assuming there's an order.. ({$level_id_to_cancel})" );
 				} else {
 					
 					// Using the supplied cancel_level_id
@@ -235,25 +152,88 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 								esc_html__( $old_level->name ),
 								$user_id
 							),
-							'warning'
+							'warning',
+							'backend'
 						);
 					}
+				}
+			}
+			
+			// Clean up existing level roles & fix missing role assignments for the user
+			foreach ( $existing_levels as $ol ) {
+				
+				$role_name = Manage_Roles::role_key . $ol->id;
+				
+				// Remove the membership role from the user ID if assigned (backwards compatibility)
+				if ( ! empty( $level_id ) && false === $this->has_role( $user_id, $role_name ) ) {
+					
+					// Return error message to the WP-Admin dashboard if failing to add role(s)
+					if ( false === $this->add_role_to_user( $user_id, $role_name, $ol->id ) ) {
+						
+						$utils->add_message(
+							sprintf(
+								__( 'Unable to add the %1$s membership level role for user %2$d', E20R_Roles_For_PMPro::plugin_slug ),
+								esc_html__( $ol->name ),
+								$user_id
+							),
+							'warning',
+							'backend'
+						);
+					}
+				}
+			}
+			
+			// Figure out if we're supposed to _NOT_ deactivate the old level(s).
+			$deactivate_old_levels = apply_filters( 'pmpro_deactivate_old_levels', true );
+			
+			// Remove any old level roles if we're supposed to be deactivating the level
+			if ( ! empty( $level_id_to_cancel ) && true === $deactivate_old_levels ) {
+				
+				$role_name = Manage_Roles::role_key . $level_id_to_cancel;
+				
+				if ( ! empty( $level_id_to_cancel ) && true === $this->has_role( $user_id, $role_name ) ) {
+					
+					if ( false === $this->remove_role_for_user( $user_id, $role_name, $level_id_to_cancel ) ) {
+						
+						$old_level = pmpro_getLevel( $level_id_to_cancel );
+						
+						$utils->add_message(
+							sprintf(
+								__( 'Unable to remove the %1$s membership level role for user ID: %2$d', E20R_Roles_For_PMPro::plugin_slug ),
+								esc_html__( $old_level->name ),
+								$user_id
+							),
+							'warning',
+							'backend'
+						);
+					}
+					
+				} else {
+					
+					$level = empty( $level_id_to_cancel ) ? __( 'No level found', E20R_Roles_For_PMPro::plugin_slug ) : pmpro_getLevel( $level_id_to_cancel )->name;
+					
+					$utils->add_message(
+						sprintf(
+							__( "Unable to cancel level specific role for user ID %d (Role level: %s)", E20R_Roles_For_PMPro::plugin_slug ), $level ),
+						'warning',
+						'backend'
+					);
 				}
 			}
 			
 			// Check if we need to add the new role to the user ID
 			$role_name = Manage_Roles::role_key . $level_id;
 			
-			$utils->log("Using the following role name: {$role_name}");
+			$utils->log( "Using the following role name: {$role_name}" );
 			
-			if ( false === $this->has_role( $user_id, $role_name ) ) {
+			if ( ! empty( $level_id ) && false === $this->has_role( $user_id, $role_name ) ) {
 				
-				$utils->log("User lacks the specified role");
+				$utils->log( "User lacks the specified role" );
 				
 				// We do, so do it.
 				if ( false === $this->add_role_to_user( $user_id, $role_name, $level_id ) ) {
 					
-					$utils->log("Unable to add the {$role_name} role to {$user_id} for {$level_id}");
+					$utils->log( "Unable to add the {$role_name} role to {$user_id} for {$level_id}" );
 					
 					// Oops, something went sideways. Let the admin know.
 					$level = pmpro_getLevel( $level_id );
@@ -270,7 +250,49 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 							esc_html__( $level_name ),
 							$user_id
 						),
-						'warning'
+						'warning',
+						'backend'
+					);
+				}
+			}
+		}
+		
+		/**
+		 * Add levels if not already assigned
+		 *
+		 * @filter pmpro_after_change_membership_level
+		 *
+		 * @param int $level_id           New level being changed to
+		 * @param int $user_id            User's ID
+		 * @param int $level_id_to_cancel The membership level being changed from
+		 *
+		 * @since  1.0
+		 */
+		public function after_change_membership_level( $level_id, $user_id, $level_id_to_cancel = null ) {
+			
+			// If this is a 'cancel membership' action, we do nothing
+			if ( empty( $level_id ) ) {
+				return;
+			}
+			
+			$utils = Utilities::get_instance();
+			
+			$role_name = Manage_Roles::role_key . $level_id;
+			
+			// Add the new membership role if not already assigned
+			if ( false === $this->has_role( $user_id, $role_name ) ) {
+				
+				if ( false === $this->add_role_to_user( $user_id, $role_name, $level_id ) ) {
+					
+					$level = pmpro_getLevel( $level_id );
+					$utils->add_message(
+						sprintf(
+							__( 'Unable to add the %1$s membership level role for user ID: %2$d', E20R_Roles_For_PMPro::plugin_slug ),
+							esc_html__( $level->name ),
+							$user_id
+						),
+						'warning',
+						'backend'
 					);
 				}
 			}
@@ -286,23 +308,28 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		 */
 		public function add_role_to_all_level_users( $role_name, $level_id ) {
 			
-			$user_ids = PMPro_Members::get_members( $level_id, 'active' );
+			$utils = Utilities::get_instance();
+			
+			$user_ids = PMPro_Members::get_members( $level_id, 'active', true );
 			
 			if ( WP_DEBUG ) {
-				error_log("Found " . count( $user_ids ) . " users to process");
+				error_log( "Found " . count( $user_ids ) . " users to process" );
 			}
 			
 			foreach ( $user_ids as $user_id ) {
 				
-				$user = get_user_by( 'ID', $user_id );
-				do_action( 'e20r_roles_add_level_role', $role_name, $level_id, $user );
+				$user        = get_user_by( 'ID', $user_id );
 				
-				if ( false === user_can( $user, $role_name) ) {
+				$utils->log("Running add_level_role filter for {$user_id}: " );
+				
+				$added_roles = apply_filters( 'e20r_roles_add_level_role', true, $role_name, $level_id, $user );
+				
+				if ( true === $added_roles && false === user_can( $user, $role_name ) ) {
 					
 					$user->add_role( $role_name );
 					
 					if ( WP_DEBUG ) {
-						error_log("Added {$role_name} to {$user_id}");
+						error_log( "Added {$role_name} to {$user_id}" );
 					}
 					
 					$user = null;
@@ -321,6 +348,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		 */
 		public function delete_role_from_all_level_users( $role_name, $level_id, $status = 'active' ) {
 			
+			$utils    = Utilities::get_instance();
 			$user_ids = PMPro_Members::get_members( $level_id, $status );
 			
 			foreach ( $user_ids as $user_id ) {
@@ -328,7 +356,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				$user = get_user_by( 'ID', $user_id );
 				$user->remove_role( $role_name );
 				
-				do_action( 'e20r_roles_delete_level_role', $role_name, $level_id, $status, $user );
+				if ( false === apply_filters( 'e20r_roles_delete_level_role', true, $role_name, $level_id, $status, $user ) ) {
+					$utils->add_message(__( "Error while processing role removal in add-on modules", E20R_Roles_For_PMPro::plugin_slug ),'warning','backend' );
+				}
 				
 				$user = null;
 			}
@@ -347,19 +377,34 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		 */
 		public function add_role_to_user( $user_id, $role_name, $level_id ) {
 			
+			$utils = Utilities::get_instance();
+			$utils->log("Executing add_role_to_user() for {$user_id}, {$role_name}, {$level_id}");
+			
 			// Add the specified role name to the user if they're in the corresponding membership level
-			if ( true === PMPro_Members::is_user( $user_id, 'active', $level_id ) ) {
+			if ( true === PMPro_Members::is_user( $user_id, 'active', $level_id, true ) ) {
+				
+				$utils->log( "{$user_id} is a valid and active level {$level_id} member on site." );
 				
 				$user = get_user_by( 'ID', $user_id );
 				$user->add_role( $role_name );
 				
-				do_action( 'e20r_roles_add_level_role',$role_name, $level_id, $user );
+				$success = apply_filters( 'e20r_roles_add_level_role', true, $role_name, $level_id, $user );
 				
-				return true;
+				if ( false === $success ) {
+					$utils->add_message( __( "There was a problem when applying the add role action in one of the add-on modules", E20R_Roles_For_PMPro::plugin_slug),'warning', 'backend' );
+				}
+				
+				return $success;
+				
 			} else {
 				// Warn the admin
 				$utils = Utilities::get_instance();
-				$utils->add_message( sprintf( __( "Error: Cannot add %s role to level %d", E20R_Roles_For_PMPro::plugin_slug ), $role_name, $level_id ), 'error' );
+				$utils->add_message(
+					sprintf(
+						__( "Error: User not an active member. Cannot add %s role for user %d", E20R_Roles_For_PMPro::plugin_slug ), $role_name, $user_id ),
+					'error',
+					'backend'
+				);
 			}
 			
 			return false;
@@ -377,17 +422,21 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		 */
 		public function remove_role_for_user( $user_id, $role_name, $level_id = null, $force = false ) {
 			
+			$level_ids = array();
+			
 			// Get the most recent level ID
-			if ( empty( $level_id ) && false === $force ) {
+			if ( null === $level_id && false === $force ) {
 				
-				$last_order = new \MemberOrder();
-				$last_order->getLastMemberOrder( $user_id, 'cancelled', $level_id );
-				$level_id = $last_order->membership_id;
+				$level_ids = array( PMPro_Members::get_previous_membership_level( $user_id ) );
 				
 			} else if ( empty( $level_id ) ) {
 				
-				$level    = pmpro_getMembershipLevelForUser( $user_id );
-				$level_id = $level->id;
+				$level_ids = PMPro_Members::get_memberships( $user_id );
+			} else {
+				
+				if ( ! is_array( $level_id ) ) {
+					$level_ids = array( $level_id );
+				}
 			}
 			
 			$cancel_statuses = array(
@@ -396,12 +445,18 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				'expired',
 			);
 			
-			if ( true === PMPro_Members::is_user( $user_id, $cancel_statuses, $level_id ) ) {
-				$user = get_user_by( 'ID', $user_id );
-				$user->remove_role( $role_name );
+			$user = get_user_by( 'ID', $user_id );
+			
+			foreach ( $level_ids as $level_id ) {
 				
-				do_action( 'e20r_roles_delete_level_role', $role_name, $level_id, 'active', $user );
-				return true;
+				if ( true === PMPro_Members::is_user( $user_id, $cancel_statuses, $level_id ) ) {
+					
+					$user->remove_role( $role_name );
+					
+					do_action( 'e20r_roles_delete_level_role', true, $role_name, $level_id, 'active', $user );
+					
+					return true;
+				}
 			}
 			
 			return false;
