@@ -228,7 +228,15 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				return $closed;
 			}
 			
-			$user             = wp_get_current_user();
+			$level_requirements = PMPro_Content_Access::get_post_levels( $forum_id );
+			$user               = wp_get_current_user();
+			
+			if ( empty( $level_requirements ) && is_user_logged_in() ) {
+				
+				$utils->log( "TODO: This forum ({$forum_id}) is _NOT_ protected. Grant full access." );
+				return false;
+			}
+			
 			$level_permission = $this->get_user_level_perms( $user->ID );
 			$level            = pmpro_getMembershipLevelForUser( $user->ID );
 			
@@ -443,12 +451,15 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			global $current_user;
 			global $post;
 			
-			$utils    = Utilities::get_instance();
-			$forum_id = bbp_get_forum_id();
+			$utils           = Utilities::get_instance();
+			$forum_id        = bbp_get_forum_id();
+			$required_levels = PMPro_Content_Access::get_post_levels( $forum_id );
+			$is_protected    = ( ! empty( $required_levels ) && is_user_logged_in() );
+			$hide_forum      = ( $this->load_option( 'hide_forums' ) && $is_protected );
 			
 			$is_forum_entity = ( $this->is_forum() || $this->is_topic() || $this->is_reply() );
 			
-			if ( ( ! bbp_is_forum_archive() && false === empty( $forum_id ) && true === $is_forum_entity ) && ( bbp_is_forum_archive() && ! $this->user_can_read( $post->ID, $current_user->ID ) ) ) {
+			if ( true == $hide_forum && ! bbp_is_forum_archive() && ! empty( $forum_id ) && true === $is_forum_entity ) {
 				
 				$utils->log( "ID {$forum_id} is a valid forum entity? " . ( $is_forum_entity ? 'Yes' : 'No' ) );
 				
@@ -1316,20 +1327,49 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 * @param string   $role_name
 		 * @param int      $level_id
 		 * @param \WP_User $user
+		 *
+		 * @return bool
 		 */
-		public function add_level_forum_role( $role_name, $level_id, $user ) {
+		public function add_level_forum_role( $success, $role_name = null, $level_id, $user ) {
 			
 			$utils = Utilities::get_instance();
 			$role  = get_role( "e20r_bbpress_level_{$level_id}_access" );
 			
-			if ( ! $role->has_cap( 'spectate' ) ) {
+			$utils->log( "Role definition: " . print_r( $role, true ) );
+			
+			if ( empty( $role ) && ! empty( $level_id ) ) {
 				
-				$utils->log( "Adding 'spectate' capability from e20r_bbpress_level_{$level_id}_access" );
+				$utils->log( "Adding e20r_bbpress_level_{$level_id}_access to system and including 'spectate'" );
+				
+				if ( $this->allow_anon_read() ) {
+					$basic_caps = array( 'spectate' );
+				} else {
+					$basic_caps = array();
+				}
+				
+				$role = new \WP_Role( "e20r_bbpress_level_{$level_id}_access", $basic_caps );
+				
+			} else if ( ! in_array( 'spectate', $role->capabilities ) && $this->allow_anon_read() ) {
+				
+				$utils->log( "Adding 'spectate' capability to the \"e20r_bbpress_level_{$level_id}_access\" role" );
 				$role->add_cap( 'spectate' );
 			}
 			
 			$utils->log( "Adding default role 'e20r_bbpress_level_access' to {$user->ID} for {$level_id}" );
 			$user->add_role( "e20r_bbpress_level_{$level_id}_access" );
+			
+			$utils->log( "Set bbPress forum role {$role_name} for user: {$user->ID}" );
+			
+			$status  = bbp_set_user_role( $user->ID, "e20r_bbpress_level_{$level_id}_access" );
+			$current = bbp_get_user_role( $user->ID );
+			
+			$utils->log( "Status is {$status}" );
+			
+			if ( "e20r_bbpress_level_{$level_id}_access" === $current ) {
+				return true;
+			}
+			
+			return false;
 		}
 		
 		/**
@@ -1338,7 +1378,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 * @param string   $status
 		 * @param \WP_User $user
 		 */
-		public function remove_level_forum_role( $role_name, $level_id, $status, $user ) {
+		public function remove_level_forum_role( $success, $role_name, $level_id, $status, $user ) {
 			
 			$utils = Utilities::get_instance();
 			$role  = get_role( "e20r_bbpress_level_{$level_id}_access" );
@@ -1347,6 +1387,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				$utils->log( "Removing 'spectate' capability from e20r_bbpress_level_{$level_id}_access" );
 				$role->remove_cap( 'spectate' );
 			}
+			
+			return $success;
+			
 		}
 		
 		/**
@@ -1409,16 +1452,57 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
+		 * Get the class name for this module/add-on
+		 *
+		 * @return string
+		 */
+		public function get_class_name() {
+			
+			if ( empty( $this->class_name ) ) {
+				$this->class_name = $this->maybe_extract_class_name( get_class( self::$instance ) );
+			}
+			
+			return $this->class_name;
+		}
+		
+		/**
+		 * Return the class name (sans namespace) if possible
+		 *
+		 * @param $string
+		 *
+		 * @return string
+		 */
+		private function maybe_extract_class_name( $string ) {
+			
+			if ( WP_DEBUG ) {
+				error_log( "Supplied (potential) class name: {$string}" );
+			}
+			
+			$class_array = explode( '\\', $string );
+			$name        = $class_array[ ( count( $class_array ) - 1 ) ];
+			
+			return $name;
+		}
+		
+		/**
 		 * Action Hook: Enable/disable this add-on. Will clean up if we're being deactivated & configured to do so
 		 *
 		 * @action e20r_roles_addon_toggle_addon
 		 *
 		 * @param string $addon
 		 * @param bool   $is_active
+		 *
+		 * @return mixed
 		 */
 		public function toggle_addon( $addon, $is_active = false ) {
 			
 			global $e20r_roles_addons;
+			
+			$self = strtolower( $this->get_class_name() );
+			
+			if ( $self !== $addon ) {
+				return $is_active;
+			}
 			
 			$utils = Utilities::get_instance();
 			$utils->log( "In toggle_addon action handler for the bbPress add-on" );
@@ -1426,7 +1510,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			if ( 'bbpress_roles' !== $addon ) {
 				$utils->log( "Not processing the bbPress add-on: {$addon}" );
 				
-				return;
+				return $is_active;
 			}
 			
 			if ( $is_active === false ) {
@@ -1729,7 +1813,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public static function configure_addon() {
 			
-			parent::is_enabled( 'bbpress_roles' );
+			$me   = self::get_instance();
+			$name = strtolower( $me->get_class_name() );
+			
+			parent::is_enabled( $name );
 		}
 		
 		/**
@@ -2556,7 +2643,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 *
 		 * @return array
 		 */
-		public function configure_addon_bbpress_role( $bbp_role_defs ) {
+		public function configure_addon_bbpress_roles( $bbp_role_defs ) {
 			
 			$level_settings = $this->load_option( 'level_settings' );
 			$utils          = Utilities::get_instance();
@@ -2576,13 +2663,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			);
 			
 			if ( ! empty( $level_settings ) ) {
-    
+				
 				foreach ( $level_settings as $level_id => $settings ) {
 					
 					$level = pmpro_getLevel( $level_id );
 					
 					if ( ! empty( $level ) ) {
-						$utils->log( "Adding role definition for {$level->name}" );
+						
+						$utils->log( "Adding role definition for {$level->name}: e20r_bbpress_level_{$level_id}_access" );
 						
 						$bbp_role_defs["e20r_bbpress_level_{$level_id}_access"] = array(
 							'name'         => $level->name,
@@ -2590,6 +2678,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 						);
 					}
 				}
+			} else {
+				$utils->add_message( sprintf( __( 'No Membership Levels defined. Please <a href="%s">configure membership level(s)</a> before proceeding', E20R_Roles_For_PMPro::plugin_slug ), admin_url( 'admin.php?page=pmpro-membershiplevels' ) ), 'error', 'backend' );
 			}
 			
 			return $bbp_role_defs;
@@ -2634,6 +2724,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$utils = Utilities::get_instance();
 			global $e20r_roles_addons;
 			
+			$utils->log( "For bbPress Roles: {$stub} " );
 			/**
 			 * Toggle ourselves on/off, and handle any deactivation if needed.
 			 */
@@ -2662,13 +2753,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			global $current_user;
 			
-			if ( true === parent::is_enabled( $stub ) ) {
+			if ( true === $e20r_roles_addons[ $stub ]['is_active'] ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
 				
 				add_filter( 'e20r_roles_addon_has_access', array( self::get_instance(), 'has_access' ), 10, 4 );
-				
-				// add_filter( 'pmpro_has_membership_access_filter', array( PMPro_Content_Access::get_instance(), 'has_membership_access' ), 99, 4 );
 				
 				$can_global_post = get_option( '_bbp_allow_global_access' );
 				$current_default = bbp_get_default_role();
@@ -2701,11 +2790,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					'delete_level_settings',
 				), 10, 2 );
 				
-				add_action( 'e20r_roles_add_level_role', array(
+				add_filter( 'e20r_roles_add_level_role', array(
 					self::get_instance(),
 					'add_level_forum_role',
-				), 10, 3 );
-				add_action( 'e20r_roles_delete_level_role', array(
+				), 10, 4 );
+				
+				// TODO: Convert to filter
+				add_filter( 'e20r_roles_delete_level_role', array(
 					self::get_instance(),
 					'remove_level_forum_role',
 				), 10, 4 );
@@ -2719,12 +2810,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				add_filter( 'bbp_get_reply_content', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				
 				add_filter( 'bbp_get_reply_class', array( self::get_instance(), 'set_reply_post_class' ), 10, 1 );
-				add_filter( 'bbp_get_dynamic_roles', array( self::get_instance(), 'configure_addon_bbpress_role' ), 1 );
+				add_filter( 'bbp_get_dynamic_roles', array(
+					self::get_instance(),
+					'configure_addon_bbpress_roles',
+				), 1 );
 				add_action( 'bbp_get_caps_for_role', array(
 					self::get_instance(),
 					'configure_addon_bbpress_role_caps',
 				), 99, 2 );
-				
 				
 				add_filter( 'pmpro_member_links_bottom', array(
 					self::get_instance(),
