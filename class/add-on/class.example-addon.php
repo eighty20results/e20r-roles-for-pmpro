@@ -455,6 +455,13 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			
 			global $e20r_roles_addons;
 			
+			$self = strtolower( $this->get_class_name() );
+			
+			if ( $self !== $addon ) {
+				return $is_active;
+			}
+			
+			
 			$utils = Utilities::get_instance();
 			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
 			
