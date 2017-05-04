@@ -125,7 +125,7 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 		 * Find user and compare their status to a status code, and a specific - or their current - membership level
 		 *
 		 * @param int      $user_id
-		 * @param array   $status
+		 * @param array    $status
 		 * @param int|null $level_id
 		 *
 		 * @return bool
@@ -273,8 +273,21 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 		
 		}
 		
-		public static function update_list_of_level_members() {
-		
+		public static function update_list_of_level_members( $level_id, $user_id, $cancel_level_id = null ) {
+			
+			$utils = Utilities::get_instance();
+			
+			self::clear_all_caches();
+			
+			$utils->log( "Cleared all member level/user id caches" );
+			
+			$all_level_statuses = apply_filters( 'e20r_roles_pmpro_member_statuses', self::get_saved_member_statuses() );
+			
+			foreach ( $all_level_statuses as $status ) {
+				
+				$utils->log( "Updating {$status} member cache for {$level_id}" );
+				self::get_members( $level_id, $status );
+			}
 		}
 		
 		/**
