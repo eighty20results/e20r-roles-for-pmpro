@@ -66,7 +66,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			}
 			
 			$utils->log( "Checking license for {$product_stub}" );
-			
+   
 			if ( null === ( $license_settings = Utilities\Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || true === $force ) {
 				
 				$utils->log( "Invalid cache for " . self::CACHE_KEY );
@@ -81,9 +81,11 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 				Utilities\Cache::set( self::CACHE_KEY, $license_settings, DAY_IN_SECONDS, self::CACHE_GROUP );
 			}
 			
-			$utils->log( "License status for {$product_stub}: {$license_settings['status']}" );
+			$is_active = ( ! empty( $license_settings['key'] ) && !empty( $license_settings['status'] ) && 'active' == $license_settings['status'] );
 			
-			return ( 'active' == $license_settings['status'] ) ? true : false;
+			$utils->log( "License status for {$product_stub}: " . ( $is_active ? 'Active' : 'Inactive') );
+			
+			return $is_active;
 		}
 		
 		/**
@@ -201,7 +203,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			    global $e20r_roles_addons;
 			    
 			    if ( isset( $e20r_roles_addons[$product] ) ) {
-			        $name = $e20r_roles_addons['label'];
+			        $name = $e20r_roles_addons[$product]['label'];
                 } else if ( isset( $settings['fulltext_name'] ) ) {
 			        $name = $settings['fulltext_name'];
                 } else {
@@ -723,7 +725,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			global $current_user;
 			
 			$utils = Utilities\Utilities::get_instance();
-			$utils->log( "Validation input: " . print_r( $input, true ) );
+			// $utils->log( "Validation input: " . print_r( $input, true ) );
 			
 			$licenses = self::get_license_settings();
 			
@@ -790,7 +792,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 				
 			}
 			
-			$utils->log( "Returning after validation: " . print_r( $licenses, true ) );
+			// $utils->log( "Returning after validation: " . print_r( $licenses, true ) );
 			
 			if ( isset( $input['delete'] ) && ! empty( $input['delete'][0] ) ) {
 				
