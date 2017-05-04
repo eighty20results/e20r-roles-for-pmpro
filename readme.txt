@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: pmpro, membership, wordpress roles, bbpress, buddypress
 Requires at least: 4.7
 Tested up to: 4.7.4
-Stable tag: 1.9.3
+Stable tag: 1.9.4
 =========
 
 Adds a WordPress Role for each Membership Level with Display Name = Membership Level Name and Role Name = 'e20r_roles_level_X' (where X is the Membership Level's ID).
@@ -29,6 +29,40 @@ Requires the BuddyPress plugin if you enable the BuddyPress Roles module (Suppor
  Please report your issue to us by using the (E20R Roles for PMPro)[link="https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/"] Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day.
 
 = Changelog =
+== 1.9.4 ==
+
+* ENHANCEMENT/FIX: Didn't show the license name correctly in error/warning message
+* ENHANCEMENT/FIX: License status check was borked
+* ENHANCEMENT/FIX: Didn't always correctly identify previous membership level(s) for user in PMPRO change level filter handlers
+* ENHANCEMENT/FIX: Don't try to add role(s) during level cancellations
+* ENHANCEMENT/FIX: Attempted to deactivate licenses that hadn't been activated (had no key)
+* ENHANCEMENT/FIX: Redirect if the 'hide forums' setting is enabled _and_ the forum ID is protected
+* ENHANCEMENT/FIX: Set the 'forum role' on change of level
+* ENHANCEMENT/FIX: Simplify config & settings for bbPress add-on
+* ENHANCEMENT/FIX: PHP Warning if there were no membership levels defined
+* ENHANCEMENT: More precise missing license warning message
+* ENHANCEMENT: Clear and refresh the user/member level cache on user update/change
+* ENHANCEMENT: Adding debug logging to after_change_membership_level() method in Manage_Roles
+* ENHANCEMENT: Fixed documentation for Cache::set()
+* ENHANCEMENT: Clear the license cache whenever we access the admin options page (force license check)
+* ENHANCEMENT: Don't pass-through the add-on toggle
+* ENHANCEMENT: Only use the change_membership_level actions to modify roles/etc
+* ENHANCEMENT: Use the standard debug logging function
+* ENHANCEMENT: Convert e20r_roles[add|delete]_level_role to a filter (allows status return)
+* ENHANCEMENT: Support cancelling multiple membership levels at once
+* ENHANCEMENT: Do not close forums that are public (not protected)
+* ENHANCEMENT: Add infrastructure to simplify allowing edit for any logged in user to a non-protected forum.
+* ENHANCEMENT: Show message if attempting to define settings for a Membership level and there's no level defined on the system
+* ENHANCEMENT: Adding documentation for maybe_extract_class_name() in BuddyPress add-on class
+* ENHANCEMENT: Label for licensed add-on/product was incorrect
+* ENHANCEMENT: Allow bypass of cached value (force DB look-up)
+* ENHANCEMENT: Look-up and cache previous membership levels & statuses for a user ID
+* ENHANCEMENT: Use default/standard error/debug logging function (Utilities::log())
+* BUG/FIX: Incorrect order for pmpro_after_change_membership_level handler arguments
+* BUG/FIX: Didn't load add-on specific filter & hook handlers for bbPress add-on
+* BUG/FIX: Swap order of before & after change membership level hooks (delete & clean up old levels, _then_ add new ones)
+* BUG/FIX: Didn't use the correct update_list_of_level_members() method during handling of 'pmpro_after_change_membership_level'
+
 == 1.9.3 ==
 
 * ENHANCEMENT: Add function to retrieve all membership levels that are required by the post ID
