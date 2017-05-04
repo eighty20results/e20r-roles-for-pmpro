@@ -321,6 +321,11 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			$utils    = Utilities\Utilities::get_instance();
 			$settings = self::get_license_settings( $product );
 			
+			if ( empty( $settings['key']) ) {
+			    $utils->log("No license key, so nothing to deactivate");
+			    return false;
+            }
+            
 			$utils->log( "Attempting to deactivate {$product} on remote server" );
 			
 			$api_params = array(
