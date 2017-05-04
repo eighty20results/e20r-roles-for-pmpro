@@ -129,10 +129,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 				'delete_level_role',
 			), 5, 1 );
 			
+			/*
 			add_action( 'pmpro_after_checkout', array(
 				Manage_Roles::get_instance(),
 				'update_user_role_at_checkout',
 			), 10, 2 );
+			*/
+			
 			add_action( 'pmpro_after_change_membership_level', array(
 				Manage_Roles::get_instance(),
 				'after_change_membership_level',
@@ -169,6 +172,17 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 				add_action( 'admin_init', array( $this, 'register_role_settings_page' ), 10 );
 			}
 			
+			add_action( 'current_screen', array( $this, 'check_admin_screen' ), 10 );
+		}
+		
+		public function check_admin_screen( $current_screen ) {
+			
+		    $utils = Utilities::get_instance();
+		    
+			if ( !empty( $this->settings_page_hook ) && $this->settings_page_hook === $current_screen->id ) {
+				$utils->log("Clear cache on register settings page");
+				Cache::delete( Licensing::CACHE_KEY, Licensing::CACHE_GROUP );
+			}
 		}
 		
 		/**
@@ -361,7 +375,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 		public function register_role_settings_page() {
 			
 		    $utils = Utilities::get_instance();
-		    
+      
 			// Configure our own settings
 			register_setting( 'e20r_role_options', "{$this->settings_name}", array( $this, 'validate_settings' ) );
 			
