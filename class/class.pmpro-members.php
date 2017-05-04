@@ -80,10 +80,11 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 		 *
 		 * @param int|null $level_id The membership level ID
 		 * @param string   $status   The status of the membership to find users for (default: active)
+		 * @param bool $force
 		 *
 		 * @return array
 		 */
-		public static function get_members( $level_id = null, $status = 'active' ) {
+		public static function get_members( $level_id = null, $status = 'active', $force = false ) {
 			
 			global $wpdb;
 			
@@ -101,7 +102,7 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 			}
 			
 			// Get data from cache if possible
-			if ( null === ( $user_ids = Cache::get( $key_name, self::cache_group ) ) ) {
+			if ( true === $force || null === ( $user_ids = Cache::get( $key_name, self::cache_group ) ) ) {
 				
 				if ( empty( $level_id ) ) {
 					$sql = $wpdb->prepare( "SELECT DISTINCT user_id FROM {$table_name} WHERE status = %s", $status );
@@ -130,7 +131,7 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 		 *
 		 * @return bool
 		 */
-		public static function is_user( $user_id, $status = array( 'active' ), $level_id = null ) {
+		public static function is_user( $user_id, $status = array( 'active' ), $level_id = null, $force = false ) {
 			
 			$ret_val = false;
 			
@@ -154,8 +155,8 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 			// Iterate through all of the statuses we've been given
 			foreach ( $status as $s ) {
 				
-				// Grab the users of that membershi level/status.
-				$user_ids = self::get_members( $level_id, $s );
+				// Grab the users of that membership level/status.
+				$user_ids = self::get_members( $level_id, $s, $force );
 				
 				if ( in_array( $user_id, $user_ids ) ) {
 					$ret_val = $ret_val || true;
@@ -290,6 +291,40 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 			}
 		}
 		
+		/**
+		 * Return the previous membership level ID for the specified user ID
+		 *
+		 * @param int $user_id
+		 *
+		 * @return int
+		 */
+		public static function get_previous_membership_level( $user_id ) {
+			
+			$utils = Utilities::get_instance();
+			
+			$utils->log("Fetching previous membership level for {$user_id}");
+			
+			if ( null === ( $user_levels = Cache::get( "user_levels_{$user_id}", E20R_Roles_For_PMPro::cache_group ) ) ) {
+				
+				$utils->log("Cache is empty. Building new cache");
+				
+				global $wpdb;
+				$sql = $wpdb->prepare( "SELECT id, membership_id, status FROM {$wpdb->pmpro_memberships_users} WHERE user_id = %d AND status <> %s ORDER BY id DESC",  $user_id, 'active' );
+				
+				$results = $wpdb->get_results( $sql );
+				$user_levels = array();
+				
+				foreach( $results as $record ) {
+					
+					$user_levels[] = array( $record->id => $record->membership_id );
+				}
+				
+				Cache::set( "user_levels_{$user_id}", $user_levels, 10 * MINUTE_IN_SECONDS, E20R_Roles_For_PMPro::cache_group );
+			}
+			
+			$level = array_pop( $user_levels );
+			return array_pop( $level );
+		}
 		/**
 		 * Return all membership statuses currently in use in the pmpro_memmberships_users table
 		 *
