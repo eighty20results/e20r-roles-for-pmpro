@@ -133,6 +133,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			return $this->class_name;
 		}
 		
+		/**
+         * Return the class name (sans namespace) if possible
+         *
+		 * @param $string
+		 *
+		 * @return string
+		 */
 		private function maybe_extract_class_name( $string ) {
 			
 			if ( WP_DEBUG ) {
@@ -674,6 +681,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 			
 			global $e20r_roles_addons;
 			
+			$self = strtolower( $this->get_class_name() );
+			
+			if ( $self !== $addon ) {
+			    return $is_active;
+            }
+            
 			$utils = Utilities::get_instance();
 			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
 			
@@ -696,7 +709,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\BuddyPress_Roles' ) ) {
 				// TODO: During add-on deactivation, remove all capabilities for levels & user(s)
 				// FixMe: Delete the option entry/entries from the Database
 				
-				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
+				$utils->log( "Deactivate the {$e20r_roles_addons[ $addon ]['label']} capabilities for all levels & all user(s)!" );
 			}
 			
 			$e20r_roles_addons[ $addon ]['is_active'] = $is_active;
