@@ -234,6 +234,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			if ( empty( $level_requirements ) && is_user_logged_in() ) {
 				
 				$utils->log( "TODO: This forum ({$forum_id}) is _NOT_ protected. Grant full access." );
+				
 				return false;
 			}
 			
@@ -459,7 +460,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$is_forum_entity = ( $this->is_forum() || $this->is_topic() || $this->is_reply() );
 			
-			if ( true == $hide_forum && ! bbp_is_forum_archive() && ! empty( $forum_id ) && true === $is_forum_entity ) {
+			if ( ( true == $hide_forum && ! $this->allow_anon_read() ) && ! bbp_is_forum_archive() && ! empty( $forum_id ) && true === $is_forum_entity ) {
 				
 				$utils->log( "ID {$forum_id} is a valid forum entity? " . ( $is_forum_entity ? 'Yes' : 'No' ) );
 				
@@ -617,7 +618,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			return ( function_exists( 'bbp_is_forum' ) ? true : false );
 		}
 		
-		
 		/**
 		 * If configured, add all available forum(s) for the current user to their account page.
 		 */
@@ -766,15 +766,16 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		public function check_access( $posts, $query ) {
 			
 			$utils = Utilities::get_instance();
-			
-			if ( ! is_user_logged_in() && $this->allow_anon_read() ) {
-				return $posts;
+   
+			if ( ! is_user_logged_in() && ( $this->allow_anon_read() ) ) {
+				$utils->log( "Letting posts through since user isn't logged in and anon read and hide member forums is disabled");
+			    return $posts;
 			}
 			
 			$filtered_posts = array();
 			$user_id        = get_current_user_id();
 			$utils->log( "Checking access for " . count( $posts ) . " posts" );
-			
+   
 			foreach ( $posts as $post ) {
 				
 				$is_forum_post = $this->is_forum_post( $post );
@@ -785,7 +786,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					continue;
 				}
 				
-				$can_see = $this->user_can_read( $post->ID, $user_id ) || $this->allow_anon_read();
+				$levels = PMPro_Content_Access::get_post_levels( $post->ID );
+				$show = ( empty($levels) || !empty( $levels ) && false == $this->load_option('hide_forums' ) );
+				
+				$can_see = $this->user_can_read( $post->ID, $user_id ) || ( $this->allow_anon_read() || $show );
 				
 				if ( true === $can_see && true === $is_forum_post ) {
 					
@@ -932,14 +936,17 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$utils = Utilities::get_instance();
 			
-			$anon_read  = $this->allow_anon_read();
-			$override   = ( $anon_read && $access_type == 'read' );
-			$permission = $this->get_user_level_perms( $user_id );
-			$result     = false;
+			$anon_read       = $this->allow_anon_read();
+			$override        = ( $anon_read && $access_type == 'read' );
+			$permission      = $this->get_user_level_perms( $user_id );
+			$levels_for_post = PMPro_Content_Access::get_post_levels( $post_id );
+			$result          = false;
+			$hide            = $this->load_option( 'hide_forums' );
 			
-			if ( $override ) {
+			// Override _or_ not protected
+			if ( $override || empty( $levels_for_post ) ) {
 				
-				$utils->log( "Override enabled. Returning true for forum access to {$post_id}" );
+				$utils->log( "Override enabled. Returning true for forum access to {$post_id}: " . ($hide ? "Hide" : "Don't hide" ) );
 				
 				return true;
 			}
@@ -957,7 +964,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$utils->log( "Requested access type is {$access_type} and override for forum/system is: " . ( $override ? 'Yes' : 'No' ) );
 			
-			if ( 'no_access' !== $permission || ( 'no_access' === $permission && true == $override ) ) {
+			if ( 'no_access' !== $permission || ( 'no_access' === $permission && ( true == $override ) ) ) {
 				
 				$capabilities = $this->select_capabilities( $permission );
 				$post_type    = get_post_type( $post_id );
@@ -1572,7 +1579,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				$level_perms = $this->get_user_level_perms( $user_id );
 			}
 			
-			$grant_access = ( true === $this->allow_anon_read() ) || ( ! empty( $user_id ) && ! empty( $level_id ) && ( 'no_access' !== $level_perms ) );
+			$grant_access = ( true === $this->allow_anon_read() || ( ! empty( $user_id ) && ! empty( $level_id ) && ( 'no_access' !== $level_perms ) ) );
 			
 			$utils->log( "Level perms for {$user_id}: " . print_r( $level_perms, true ) );
 			$utils->log( "Granting access to the forum? " . ( $grant_access ? 'Yes' : 'No' ) );
@@ -2658,14 +2665,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 			
 			$bbp_role_defs["e20r_bbpress_default_access"] = array(
-				'name'         => 'Default for Member Roles',
+				'name'         => __( 'Default for Member Roles', E20R_Roles_For_PMPro::plugin_slug ),
 				'capabilities' => $use_caps,
 			);
 			
 			$bbp_role_defs['unproteced_forum'] = array(
-                'name' => "Add Topics/Replies to forums w/o Membership level protection",
-                'capabilities' => $this->select_capabilities( 'add_topics' )
-            );
+				'name'         => __( "Add Topics/Replies to forums w/o Membership level protection", E20R_Roles_For_PMPro::plugin_slug ),
+				'capabilities' => $this->select_capabilities( 'add_topics' ),
+			);
 			
 			if ( ! empty( $level_settings ) ) {
 				
