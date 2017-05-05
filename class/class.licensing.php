@@ -75,7 +75,11 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 				
 				// Get new/existing settings
 				$license_settings = self::get_license_settings();
-				$license_settings = $license_settings[ $product_stub ];
+				if ( !isset( $license_settings[$product_stub] ) ) {
+					$license_settings[$product_stub] = array();
+                }
+                
+				$license_settings = isset( $license_settings[ $product_stub ] ) ? $license_settings[ $product_stub ] : $license_settings[$pro];
 				
 				// Update the local cache for the license
 				Utilities\Cache::set( self::CACHE_KEY, $license_settings, DAY_IN_SECONDS, self::CACHE_GROUP );
