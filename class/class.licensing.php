@@ -210,7 +210,7 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			        $name = "Unidentified";
                 }
                 
-				$msg = sprintf( __( "Sorry, no valid license found for: %s", self::$text_domain ), $settings['fulltext_name'] );
+				$msg = sprintf( __( "Sorry, no valid license found for: %s", self::$text_domain ), $name );
 				$utils->log( $msg );
 				$utils->add_message( $msg, 'error' );
 				
