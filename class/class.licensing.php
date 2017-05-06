@@ -303,12 +303,12 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 			$utils            = Utilities\Utilities::get_instance();
 			$license_settings = self::get_license_settings();
 			
-			if ( ! empty( $settings ) && 'e20r_default_license' !== $product && ! empty( $product ) ) {
+			if ( ! empty( $settings ) && !in_array( $product, array( 'e20r_default_license', 'example_addon' ) ) && ! empty( $product ) ) {
 				
 				$license_settings[ $product ] = $settings;
 				$utils->log( "Saving license settings for {$product}" );
 				
-			} else if ( empty( $settings ) && ( 'e20r_default_license' !== $product && ! empty( $product ) ) ) {
+			} else if ( empty( $settings ) && ( ! in_array( $product, array( 'e20r_default_license', 'example_addon' ) ) && ! empty( $product ) ) ) {
 				
 				$utils->log( "Removing license settings for {$product}" );
 				unset( $license_settings[ $product ] );
