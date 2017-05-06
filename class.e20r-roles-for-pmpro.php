@@ -292,7 +292,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 							$setting_names = array();
 						}
 						
-						if ( ! in_array( $class_name, $setting_names ) && false === strpos( $class_name, 'e20r_roles_addon' ) ) {
+						if ( ! in_array( $class_name, $setting_names ) && ! in_array( $class_name, array( 'e20r_default_license', 'example_addon' ) ) && false === strpos( $class_name, 'e20r_roles_addon' ) ) {
 							
 							if ( WP_DEBUG ) {
 								error_log( "Found unlisted class: {$class_name}" );
