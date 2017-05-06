@@ -172,6 +172,36 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 		}
 		
 		/**
+         * Is the license scheduled to expire within the specified interval(s)
+         *
+		 * @param string $product
+		 *
+		 * @return bool
+		 */
+		public static function is_license_expiring( $product ) {
+		    
+		    $utils = Utilities\Utilities::get_instance();
+		    
+		    $settings = self::get_license_settings( $product );
+      
+		    if ( empty( $settings['expires'] ) ) {
+		        return false;
+            }
+            
+            $expiration_interval = apply_filters( 'e20r_licensing_expiration_warning_intervals', array( 30, 7 ) );
+			$calculated_warning_time = strtotime( "+ {$expiration_interval} day", current_time('timestamp') );
+		    $license_expiration = strtotime( $settings['expires'], current_time('timestamp'));
+      
+		    $utils->log("Scheduled to expire on {$license_expiration} vs {$calculated_warning_time}");
+		    
+		    if ( $license_expiration <= $calculated_warning_time ) {
+		        return true;
+            }
+            
+            return false;
+        }
+        
+		/**
 		 * Connect to license server and check status for the current product/server
 		 *
 		 * @param string $product
