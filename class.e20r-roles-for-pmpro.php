@@ -163,6 +163,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			add_action( 'plugins_loaded', 'E20R\\Roles_For_PMPro\\PMPro_Content_Access::load', 10 );
 			
 			add_action( 'admin_menu', array( $this, 'load_admin_settings_page' ), 10 );
+			add_action( 'admin_init', array( $this, 'check_license_warnings' ) );
 			
 			if ( ! empty ( $GLOBALS['pagenow'] )
 			     && ( 'options-general.php' === $GLOBALS['pagenow']
@@ -353,6 +354,19 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			return false;
 		}
 		
+		public function check_license_warnings() {
+		    
+		    global $e20r_roles_addons;
+		    $products = keys( $e20r_roles_addons );
+		    $utils = Utilities::get_instance();
+		    
+		    foreach( $products as $stub ) {
+		        
+		        if ( true === Licensing::is_license_expiring( $stub ) ) {
+		            $utils->add_message( sprintf( __( 'The license for %s is expiring soon. For continued access to this add-on, please <a href="%s" target="_blank">renew your license</a>.'), $e20r_roles_addons[$stub]['label'], 'https://eighty20results.com/licensing/' ), 'warning', 'backend' );
+                }
+            }
+        }
 		/**
 		 * Generate the options page for this plugin
 		 */
