@@ -357,13 +357,19 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 		public function check_license_warnings() {
 		    
 		    global $e20r_roles_addons;
-		    $products = keys( $e20r_roles_addons );
+		    $products = array_keys( $e20r_roles_addons );
 		    $utils = Utilities::get_instance();
 		    
 		    foreach( $products as $stub ) {
 		        
-		        if ( true === Licensing::is_license_expiring( $stub ) ) {
-		            $utils->add_message( sprintf( __( 'The license for %s is expiring soon. For continued access to this add-on, please <a href="%s" target="_blank">renew your license</a>.'), $e20r_roles_addons[$stub]['label'], 'https://eighty20results.com/licensing/' ), 'warning', 'backend' );
+		        switch( Licensing::is_license_expiring( $stub ) ) {
+		            
+                    case true:
+	                    $utils->add_message( sprintf( __( 'The license for %s will renew soon. As this is an automatic payment, you will not have to do anything. To modify <a href="%s" target="_blank">your license</a>, you will need to access <a href="%s" target="_blank">your account page</a>'), $e20r_roles_addons[$stub]['label'], 'https://eighty20results.com/licenses/', 'https://eighty20results.com/account/' ), 'info', 'backend' );
+                        break;
+                    case -1:
+                        $utils->add_message(sprintf( __( 'Your add-on license has expired. For continued use of the E20R Roles: %s add-on, you will need to <a href="%s" target="_blank">purchase and install a new license</a>.'), $e20r_roles_addons[$stub]['label'], 'https://eighty20results.com/licenses/' ), 'error', 'backend' );
+                        break;
                 }
             }
         }
