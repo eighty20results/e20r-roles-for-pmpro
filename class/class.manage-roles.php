@@ -324,7 +324,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				
 				$added_roles = apply_filters( 'e20r_roles_add_level_role', true, $role_name, $level_id, $user );
 				
-				if ( true === $added_roles && false === user_can( $user, $role_name ) ) {
+				if ( !empty( $user ) && true === $added_roles && false === user_can( $user, $role_name ) ) {
 					
 					$user->add_role( $role_name );
 					
