@@ -183,20 +183,23 @@ if ( ! class_exists( 'E20R\\Licensing\\Licensing' ) ) {
 		    $utils = Utilities\Utilities::get_instance();
 		    
 		    $settings = self::get_license_settings( $product );
-      
+            $utils->log("Expiration date: {$settings['expires']}");
+            
 		    if ( empty( $settings['expires'] ) ) {
 		        return false;
             }
             
-            $expiration_interval = apply_filters( 'e20r_licensing_expiration_warning_intervals', array( 30, 7 ) );
+            $expiration_interval = apply_filters( 'e20r_licensing_expiration_warning_intervals', 30 );
 			$calculated_warning_time = strtotime( "+ {$expiration_interval} day", current_time('timestamp') );
-		    $license_expiration = strtotime( $settings['expires'], current_time('timestamp'));
+		    $diff = $settings['expires'] - $calculated_warning_time;
       
-		    $utils->log("Scheduled to expire on {$license_expiration} vs {$calculated_warning_time}");
+		    $utils->log("Scheduled to expire on {$settings['expires']} vs {$calculated_warning_time}");
 		    
-		    if ( $license_expiration <= $calculated_warning_time ) {
+		    if ( $settings['expires'] <= $calculated_warning_time && $diff > 0 ) {
 		        return true;
-            }
+            } else if ( $diff <= 0 ) {
+			    return -1;
+		    }
             
             return false;
         }
