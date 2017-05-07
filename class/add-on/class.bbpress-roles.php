@@ -1363,19 +1363,22 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 			
 			$utils->log( "Adding default role 'e20r_bbpress_level_access' to {$user->ID} for {$level_id}" );
-			$user->add_role( "e20r_bbpress_level_{$level_id}_access" );
 			
-			$utils->log( "Set bbPress forum role {$role_name} for user: {$user->ID}" );
+			if ( isset( $user->ID ) ) {
 			
-			$status  = bbp_set_user_role( $user->ID, "e20r_bbpress_level_{$level_id}_access" );
-			$current = bbp_get_user_role( $user->ID );
-			
-			$utils->log( "Status is {$status}" );
-			
-			if ( "e20r_bbpress_level_{$level_id}_access" === $current ) {
-				return true;
+				$user->add_role( "e20r_bbpress_level_{$level_id}_access" );
+				
+				$utils->log( "Set bbPress forum role {$role_name} for user: {$user->ID}" );
+				
+				$status  = bbp_set_user_role( $user->ID, "e20r_bbpress_level_{$level_id}_access" );
+				$current = bbp_get_user_role( $user->ID );
+				
+				$utils->log( "Status is {$status}" );
+				
+				if ( "e20r_bbpress_level_{$level_id}_access" === $current ) {
+					return true;
+				}
 			}
-			
 			return false;
 		}
 		
