@@ -318,13 +318,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 			
 			foreach ( $user_ids as $user_id ) {
 				
-				$user        = get_user_by( 'ID', $user_id );
+				$user = get_user_by( 'ID', $user_id );
 				
-				$utils->log("Running add_level_role filter for {$user_id}: " );
+				$utils->log( "Running add_level_role filter for {$user_id}: " );
 				
 				$added_roles = apply_filters( 'e20r_roles_add_level_role', true, $role_name, $level_id, $user );
 				
-				if ( true === $added_roles && false === user_can( $user, $role_name ) ) {
+				if ( isset( $user->ID ) && true === $added_roles && false === user_can( $user, $role_name ) ) {
 					
 					$user->add_role( $role_name );
 					
@@ -357,7 +357,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				$user->remove_role( $role_name );
 				
 				if ( false === apply_filters( 'e20r_roles_delete_level_role', true, $role_name, $level_id, $status, $user ) ) {
-					$utils->add_message(__( "Error while processing role removal in add-on modules", E20R_Roles_For_PMPro::plugin_slug ),'warning','backend' );
+					$utils->add_message( __( "Error while processing role removal in add-on modules", E20R_Roles_For_PMPro::plugin_slug ), 'warning', 'backend' );
 				}
 				
 				$user = null;
@@ -378,7 +378,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		public function add_role_to_user( $user_id, $role_name, $level_id ) {
 			
 			$utils = Utilities::get_instance();
-			$utils->log("Executing add_role_to_user() for {$user_id}, {$role_name}, {$level_id}");
+			$utils->log( "Executing add_role_to_user() for {$user_id}, {$role_name}, {$level_id}" );
 			
 			// Add the specified role name to the user if they're in the corresponding membership level
 			if ( true === PMPro_Members::is_user( $user_id, 'active', $level_id, true ) ) {
@@ -391,7 +391,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 				$success = apply_filters( 'e20r_roles_add_level_role', true, $role_name, $level_id, $user );
 				
 				if ( false === $success ) {
-					$utils->add_message( __( "There was a problem when applying the add role action in one of the add-on modules", E20R_Roles_For_PMPro::plugin_slug),'warning', 'backend' );
+					$utils->add_message( __( "There was a problem when applying the add role action in one of the add-on modules", E20R_Roles_For_PMPro::plugin_slug ), 'warning', 'backend' );
 				}
 				
 				return $success;
