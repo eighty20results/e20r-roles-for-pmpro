@@ -1251,7 +1251,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 			
 			// Do we need to override the access value?
-			$access_for_levels = get_post_meta( $post->ID, 'e20r_bbpress_access_levels' );
+			$access_for_levels = PMPro_Content_Access::get_post_levels( $post->ID );
 			
 			if ( ! is_user_logged_in() ) {
 				return $has_access || $this->allow_anon_read();
