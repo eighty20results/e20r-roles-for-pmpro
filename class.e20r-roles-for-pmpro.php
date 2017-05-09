@@ -120,14 +120,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_register_scripts' ), 9 );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 20 );
 			
-			add_action( 'pmpro_save_membership_level', array(
-				Role_Definitions::get_instance(),
-				'add_level_role',
-			), 20, 1 );
-			add_action( 'pmpro_delete_membership_level', array(
-				Role_Definitions::get_instance(),
-				'delete_level_role',
-			), 5, 1 );
+			add_action( 'pmpro_save_membership_level', array( Role_Definitions::get_instance(), 'add_level_role' ), 20, 1 );
+			add_action( 'pmpro_delete_membership_level', array( Role_Definitions::get_instance(), 'delete_level_role' ), 5, 1 );
 			
 			/*
 			add_action( 'pmpro_after_checkout', array(
@@ -136,21 +130,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			), 10, 2 );
 			*/
 			
-			add_action( 'pmpro_after_change_membership_level', array(
-				Manage_Roles::get_instance(),
-				'after_change_membership_level',
-			), 10, 2 );
+			add_action( 'pmpro_after_change_membership_level', array( Manage_Roles::get_instance(), 'after_change_membership_level' ), 10, 2 );
+			add_action( 'pmpro_after_change_membership_level', array( PMPro_Members::get_instance(), 'update_list_of_level_members' ), 99, 2 );
 			
-			add_action( 'pmpro_after_change_membership_level', array(
-				PMPro_Members::get_instance(),
-				'update_list_of_level_members',
-			), 99, 2 );
-			
-			add_action( 'wp_ajax_' . self::ajax_fix_action, array(
-				Role_Definitions::get_instance(),
-				'repair_roles',
-			), 10 );
-			
+			add_action( 'wp_ajax_' . self::ajax_fix_action, array( Role_Definitions::get_instance(), 'repair_roles' ), 10 );
 			add_action( 'wp_ajax_nopriv_' . self::ajax_fix_action, array( $this, 'unprivileged_error' ), 10 );
 			
 			add_action( 'pmpro_membership_level_after_other_settings', array( $this, 'level_settings_page' ), 10 );
@@ -182,14 +165,18 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 		 *
 		 * @param $handle - File handle for the pipe to the CURL process
 		 */
-		function force_tls_12( $handle ) {
+		public function force_tls_12( $handle ) {
 			
 			// set the CURL option to use.
 			curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
 		}
-	
-	
-	public function check_admin_screen( $current_screen ) {
+		
+		/**
+         * Clear the License cache (and force remote look-up) if the user is accessing the Settings page for E20R Roles
+         *
+		 * @param $current_screen
+		 */
+	    public function check_admin_screen( $current_screen ) {
 			
 		    $utils = Utilities::get_instance();
 		    
@@ -213,6 +200,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 		
 		/**
 		 * Configure the default (global) settings for this add-on
+         *
 		 * @return array
 		 */
 		private function default_settings() {
@@ -250,7 +238,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			
 			foreach ( $e20r_roles_addons as $addon_name => $settings ) {
     
-				$utils->log("Trigger local toggle_addon action for {$addon_name}");
+				$utils->log("Trigger local toggle_addon action for {$addon_name}: is_active = " . ( isset( $input["is_{$addon_name}_active"] ) ? 'Yes' : 'No') );
 				
 				do_action( 'e20r_roles_addon_toggle_addon', $addon_name, isset( $input["is_{$addon_name}_active"] ) );
 			}
@@ -276,6 +264,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 		private function load_addon_settings() {
 			
 			global $e20r_roles_addons;
+			$utils = Utilities::get_instance();
 			
 			$addon_directory_list = apply_filters( 'e20r_roles_addon_directory_path', array( plugin_dir_path( __FILE__ ) . "class/add-on/" ) );
 			
@@ -294,10 +283,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 						$parts      = explode( '.', $file );
 						$class_name = $parts[ count( $parts ) - 2 ];
 						$class_name = preg_replace( '/-/', '_', $class_name );
-						
-						if ( WP_DEBUG ) {
-							error_log( "Searching for: {$class_name}" );
-						}
+                        
+                        $utils->log( "Searching for: {$class_name}" );
 						
 						
 						if ( is_array( $e20r_roles_addons ) ) {
@@ -307,19 +294,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 						}
 						
 						if ( ! in_array( $class_name, $setting_names ) && ! in_array( $class_name, array( 'e20r_default_license', 'example_addon' ) ) && false === strpos( $class_name, 'e20r_roles_addon' ) ) {
-							
-							if ( WP_DEBUG ) {
-								error_log( "Found unlisted class: {$class_name}" );
-							}
-							
+       
+							$utils->log( "Found unlisted class: {$class_name}" );
+       
 							$var_name = 'class_name';
 							$path     = $addon_directory . sanitize_file_name( $file );
-							
-							
-							if ( WP_DEBUG ) {
-								error_log( "Path to {$class_name}: {$path}" );
-							}
-							
+                            
+                            $utils->log( "Path to {$class_name}: {$path}" );
+								
 							// Include the add-on source file
 							if ( file_exists( $path ) ) {
 								
@@ -327,19 +309,18 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 								
 								$class = $e20r_roles_addons[ $class_name ][ $var_name ];
 								
-								$class = "E20R\\Roles_For_PMPro\\Addon\\{$class}";
-								
-								if ( WP_DEBUG ) {
-									error_log( "Loading {$class}" );
-								}
-								
-								$enabled = $class::is_enabled( $class_name );
-								
-								if ( true == $enabled ) {
-									if ( WP_DEBUG ) {
-										error_log( "Loading the actions & hooks for {$class}" );
+								if ( !empty( $class ) ) {
+								    
+                                    $class = "E20R\\Roles_For_PMPro\\Addon\\{$class}" ;
+									$utils->log( "Loading {$class}" );
+									
+									$enabled = $class::is_enabled( $class_name );
+									
+									if ( true == $enabled ) {
+										
+										$utils->log( "Loading the actions & hooks for {$class}" );
+										$class::load_addon();
 									}
-									$class::load_addon();
 								}
 							}
 						}
@@ -367,6 +348,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			return false;
 		}
 		
+		/**
+		 * Add & display license warnings
+		 */
 		public function check_license_warnings() {
 		    
 		    global $e20r_roles_addons;
@@ -386,6 +370,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
                 }
             }
         }
+        
 		/**
 		 * Generate the options page for this plugin
 		 */
@@ -519,11 +504,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			
 			if ( ! empty( $config ) ) {
 				$is_active  = $config['is_active'];
+				$disable = $config['disabled'];
 				$addon_name = strtolower( $config['class_name'] );
 				?>
                 <input id="<?php esc_attr_e( $addon_name ); ?>-checkbox" type="checkbox"
                        name="<?php echo $this->settings_name; ?>[<?php echo "is_{$addon_name}_active"; ?>]"
-                       value="1" <?php checked( $is_active, true ); ?> />
+                       value="1" <?php checked( $is_active, true ); ?> <?php echo ( $disable ? 'disabled="disabled"' : null ); ?>/>
 				<?php
 			}
 		}
@@ -755,9 +741,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			load_textdomain( E20R_Roles_For_PMPro::plugin_slug, $local_mo );
 			
 		}
-		
 	}
-	
 }
 
 /**
