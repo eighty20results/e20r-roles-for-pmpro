@@ -766,16 +766,17 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		public function check_access( $posts, $query ) {
 			
 			$utils = Utilities::get_instance();
-   
+			
 			if ( ! is_user_logged_in() && ( $this->allow_anon_read() ) ) {
-				$utils->log( "Letting posts through since user isn't logged in and anon read and hide member forums is disabled");
-			    return $posts;
+				$utils->log( "Letting posts through since user isn't logged in and anon read and hide member forums is disabled" );
+				
+				return $posts;
 			}
 			
 			$filtered_posts = array();
 			$user_id        = get_current_user_id();
 			$utils->log( "Checking access for " . count( $posts ) . " posts" );
-   
+			
 			foreach ( $posts as $post ) {
 				
 				$is_forum_post = $this->is_forum_post( $post );
@@ -787,7 +788,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				}
 				
 				$levels = PMPro_Content_Access::get_post_levels( $post->ID );
-				$show = ( empty($levels) || !empty( $levels ) && false == $this->load_option('hide_forums' ) );
+				$show   = ( empty( $levels ) || ! empty( $levels ) && false == $this->load_option( 'hide_forums' ) );
 				
 				$can_see = $this->user_can_read( $post->ID, $user_id ) || ( $this->allow_anon_read() || $show );
 				
@@ -946,7 +947,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			// Override _or_ not protected
 			if ( $override || empty( $levels_for_post ) ) {
 				
-				$utils->log( "Override enabled. Returning true for forum access to {$post_id}: " . ($hide ? "Hide" : "Don't hide" ) );
+				$utils->log( "Override enabled. Returning true for forum access to {$post_id}: " . ( $hide ? "Hide" : "Don't hide" ) );
 				
 				return true;
 			}
@@ -1365,7 +1366,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$utils->log( "Adding default role 'e20r_bbpress_level_access' to {$user->ID} for {$level_id}" );
 			
 			if ( isset( $user->ID ) ) {
-			
+				
 				$user->add_role( "e20r_bbpress_level_{$level_id}_access" );
 				
 				$utils->log( "Set bbPress forum role {$role_name} for user: {$user->ID}" );
@@ -1379,6 +1380,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					return true;
 				}
 			}
+			
 			return false;
 		}
 		
@@ -1418,46 +1420,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				// TODO: During core plugin deactivation, remove all capabilities for levels & user(s)
 				// FixMe: Delete all option entries from the Database for this add-on
 				error_log( "Deactivate the capabilities for all levels & all user(s)!" );
-			}
-		}
-		
-		/**
-		 * Loads the default settings (keys & values)
-		 *
-		 * @return array
-		 *
-		 * @access private
-		 * @since  1.0
-		 */
-		private function load_defaults() {
-			
-			return array(
-				'global_anon_read'   => false,
-				'topic_label'        => __( 'Topic', 'bbpress' ),
-				'topic_label_plural' => __( 'Topics', 'bbpress' ),
-				'deactivation_reset' => false,
-				'on_account_page'    => false,
-				'hide_forums'        => false,
-				'level_settings'     => array(
-					- 1 => array(
-						'capabilities'     => array(),
-						'forum_permission' => 'no_access',
-					),
-				),
-			);
-			
-		}
-		
-		/**
-		 * Load the saved options, or generate the default settings
-		 */
-		private function define_settings() {
-			
-			$this->settings = get_option( $this->option_name, $this->load_defaults() );
-			$defaults       = $this->load_defaults();
-			
-			foreach ( $defaults as $key => $dummy ) {
-				$this->settings[ $key ] = isset( $this->settings[ $key ] ) ? $this->settings[ $key ] : $defaults[ $key ];
 			}
 		}
 		
@@ -1541,26 +1503,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$utils->log( "Setting the {$addon} option to {$is_active}" );
 			update_option( "e20r_{$addon}_enabled", $is_active, true );
-		}
-		
-		/**
-		 * Load the specific option from the option array
-		 *
-		 * @param string $option_name
-		 *
-		 * @return bool|array
-		 */
-		public function load_option( $option_name ) {
-			
-			$this->settings = get_option( "{$this->option_name}" );
-			
-			if ( isset( $this->settings[ $option_name ] ) && ! empty( $this->settings[ $option_name ] ) ) {
-				
-				return $this->settings[ $option_name ];
-			}
-			
-			return false;
-			
 		}
 		
 		/**
@@ -1721,6 +1663,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
+		 * Only load forums/topics/replies we have access to
+		 *
 		 * @param \WP_Query $query
 		 *
 		 * @return \WP_Query
@@ -1799,6 +1743,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
+		 * Hide the content of the forum topic/reply
+		 *
 		 * @param string $content
 		 * @param int    $reply_id
 		 *
@@ -1823,8 +1769,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public static function configure_addon() {
 			
-			$me   = self::get_instance();
-			$name = strtolower( $me->get_class_name() );
+			$me    = self::get_instance();
+			$name  = strtolower( $me->get_class_name() );
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Executing configure_addon() for bbPress Roles" );
 			
 			parent::is_enabled( $name );
 		}
@@ -2149,14 +2098,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
-		 * Save the settings to the DB
-		 */
-		public function save_settings() {
-			
-			update_option( $this->option_name, $this->settings, true );
-		}
-		
-		/**
 		 * Adds the membership level specific bbPress role settings
 		 *
 		 * @access public
@@ -2466,10 +2407,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			error_log( "Loading read capabilities" );
 			
 			$default_capabilities = array(
-				'spectate',
-				'read_private_replies',
-				'read_private_topics',
-				'read_private_forums',
+				'spectate'             => true,
+				'read_private_replies' => true,
+				'read_private_topics'  => true,
+				'read_private_forums'  => true,
 			);
 			
 			$this->_read_only_capabilities = apply_filters( 'e20r_roles_bbpress_read_capabilities', $default_capabilities );
@@ -2487,9 +2428,21 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			error_log( "Loading various reply capabilities" );
 			
-			$default_reply_capabilities  = array( 'publish_replies', 'edit_replies', 'participate', );
-			$default_thread_capabilities = array( 'publish_topics', 'edit_topics', 'assign_topic_tags', );
-			$default_forum_capabilities  = array( 'publish_forums', 'edit_forums', 'read_hidden_forums', );
+			$default_reply_capabilities  = array(
+				'publish_replies' => true,
+				'edit_replies'    => true,
+				'participate'     => true,
+			);
+			$default_thread_capabilities = array(
+				'publish_topics'    => true,
+				'edit_topics'       => true,
+				'assign_topic_tags' => true,
+			);
+			$default_forum_capabilities  = array(
+				'publish_forums'     => true,
+				'edit_forums'        => true,
+				'read_hidden_forums' => true,
+			);
 			
 			$this->_add_replies_capabilities = apply_filters(
 				'e20r_roles_bbpress_add_reply_capabilities',
@@ -2522,20 +2475,20 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			error_log( "Loading support capabilities" );
 			
 			$default_capabilities = array(
-				'edit_others_topics',
-				'delete_topics',
-				'delete_others_topics',
-				'read_private_topics',
-				'edit_others_replies',
-				'delete_replies',
-				'delete_others_replies',
-				'read_private_replies',
-				'manage_topic_tags',
-				'edit_topic_tags',
-				'delete_topic_tags',
-				'moderate',
-				'throttle',
-				'view_trash',
+				'edit_others_topics'    => true,
+				'delete_topics'         => true,
+				'delete_others_topics'  => true,
+				'read_private_topics'   => true,
+				'edit_others_replies'   => true,
+				'delete_replies'        => true,
+				'delete_others_replies' => true,
+				'read_private_replies'  => true,
+				'manage_topic_tags'     => true,
+				'edit_topic_tags'       => true,
+				'delete_topic_tags'     => true,
+				'moderate'              => true,
+				'throttle'              => true,
+				'view_trash'            => true,
 			);
 			
 			$this->_forum_support_capabilities = apply_filters(
@@ -2558,10 +2511,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			error_log( "Loading admin capabilities" );
 			
 			$default_capabilities = array(
-				'publish_forums',
-				'edit_forums',
-				'edit_others_forums',
-				'delete_forums',
+				'publish_forums'     => true,
+				'edit_forums'        => true,
+				'edit_others_forums' => true,
+				'delete_forums'      => true,
 			);
 			
 			$this->_forum_admin_capabilities = apply_filters(
@@ -2661,7 +2614,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			if ( true == $this->load_option( 'global_anon_read' ) ) {
 				$utils->log( "Global anonymous read access is enabled" );
-				$use_caps = array( 'spectate' );
+				$use_caps = array( 'spectate' => true );
 			} else {
 				$utils->log( "Global anonymous read access is NOT enabled" );
 				$use_caps = array();
@@ -2730,6 +2683,101 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
+		 * Loads the default settings (keys & values)
+		 *
+		 * @return array
+		 *
+		 * @access private
+		 * @since  1.0
+		 */
+		private function load_defaults() {
+			
+			return array(
+				'global_anon_read'   => false,
+				'topic_label'        => __( 'Topic', 'bbpress' ),
+				'topic_label_plural' => __( 'Topics', 'bbpress' ),
+				'deactivation_reset' => false,
+				'on_account_page'    => false,
+				'hide_forums'        => false,
+				'level_settings'     => array(
+					- 1 => array(
+						'capabilities'     => array(),
+						'forum_permission' => 'no_access',
+					),
+				),
+			);
+			
+		}
+		
+		/**
+		 * Load the saved options, or generate the default settings
+		 */
+		private function define_settings() {
+			
+			$this->settings = get_option( $this->option_name, $this->load_defaults() );
+			$defaults       = $this->load_defaults();
+			
+			$this->settings = shortcode_atts( $defaults, $this->settings );
+		}
+		
+		/**
+		 * Load the specific option from the option array
+		 *
+		 * @param string $option_name
+		 *
+		 * @return bool|array
+		 */
+		public function load_option( $option_name ) {
+			
+			$this->settings = get_option( "{$this->option_name}" );
+			
+			if ( isset( $this->settings[ $option_name ] ) && ! empty( $this->settings[ $option_name ] ) ) {
+				
+				return $this->settings[ $option_name ];
+			}
+			
+			return false;
+			
+		}
+		
+		/**
+		 * Save the settings to the DB
+		 */
+		public function save_settings( $settings = null ) {
+			
+		    if ( !empty( $settings ) ) {
+			    $this->settings = $settings;
+		    }
+		    
+			update_option( $this->option_name, $this->settings, true );
+		}
+		
+		/**
+		 * @param array     $capabilities
+		 * @param string    $role_name
+		 * @param \stdClass $level
+		 */
+		public function maybe_convert_capability_list( $capabilities, $role_name, $level ) {
+			
+			$new_caps = array();
+			$utils    = Utilities::get_instance();
+			
+			$numeric_keys = array_filter( array_keys( $capabilities ), 'is_int' );
+			
+			if ( ! empty( $numeric_keys ) ) {
+				
+				remove_role( 'role_name' );
+				$new_caps = array();
+				
+				foreach ( $numeric_keys as $key ) {
+					$new_caps[ $capabilities[ $key ] ] = true;
+				}
+				
+				$role = add_role( $role_name, "{$level->name} Role", $new_caps );
+			}
+		}
+		
+		/**
 		 * Load add-on actions/filters when the add-on is active & enabled
 		 *
 		 * @param string $stub Lowercase Add-on class name
@@ -2740,6 +2788,58 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			global $e20r_roles_addons;
 			
 			$utils->log( "For bbPress Roles: {$stub} " );
+			
+			$should_fix = get_option( 'e20r_roles_fixed_role_defs', false );
+			
+			if ( false == $should_fix ) {
+				
+				$utils->log( "Having to fix the membership role(s)!" );
+				
+				$me             = self::get_instance();
+				$levels         = pmpro_getAllLevels( true, true );
+				$level_settings = $me->load_option( 'level_settings' );
+				
+				foreach ( $levels as $level ) {
+					
+					$role = get_role( "e20r_bbpress_level_{$level->id}_access" );
+					
+					if ( ! empty( $role ) ) {
+						
+						$utils->log( "Processing {$role->name}" );
+						
+						$me->maybe_convert_capability_list( $role->capabilities, $role->name, $level->id );
+						
+						$role = get_role( "e20r_bbpress_level_{$level->id}_access" );
+					}
+					
+					if ( ! empty( $level_settings[ $level->id ]['forum_permissions'] ) ) {
+						
+						$numeric_keys = array_filter( array_keys( $level_settings[ $level->id ]['capabilities'] ), 'is_int' );
+						
+						if ( ! empty( $numeric_keys ) ) {
+							
+							$new_caps = array();
+							
+							foreach ( $numeric_keys as $key ) {
+           
+							    if ( ! is_numeric( $level_settings[ $level->id ]['capabilities'][ $key ] ) ) {
+								    $new_caps[ $level_settings[ $level->id ]['capabilities'][ $key ] ] = true;
+							    }
+							}
+						}
+						
+						$level_settings[$level->id]['capabilities'] = $new_caps;
+					}
+					
+					$utils->log( "Role {$role->name} now has: " . print_r( $role->capabilities, true ) );
+					$utils->log( "Level role settings for {$level_settings[$level->id]['forum_permissions']} now has: " . print_r( $level_settings[ $level->id ]['capabilities'], true ) );
+				}
+				
+				$me->save_settings( $level_settings );
+				
+				update_option( 'e20r_roles_fixed_role_defs', true, false );
+			}
+			
 			/**
 			 * Toggle ourselves on/off, and handle any deactivation if needed.
 			 */
@@ -2760,7 +2860,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				self::get_instance(),
 				'add_new_license_info',
 			), 10, 1 );
-			add_filter( 'e20r_roles_addon_options_bbPress_Roles', array(
+			add_filter( 'e20r_roles_addon_options_bbpress_roles', array(
 				self::get_instance(),
 				'register_settings',
 			), 10, 1 );
