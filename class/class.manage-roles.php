@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define the Manage_Roles class
-if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
+if ( ! class_exists( 'E20R\Roles_For_PMPro\Manage_Roles' ) ) {
 	
 	class Manage_Roles {
 		
@@ -48,12 +48,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Manage_Roles' ) ) {
 		 * @param string $post_type
 		 * @param int    $level_id
 		 *
-		 *  TODO: Implement set_required_caps_for_level() method
 		 */
 		public function set_required_caps_for_level( $post_type, $level_id ) {
 			
 			$role_name = Manage_Roles::role_key . $level_id;
 			
+			do_action('e20r_roles_set_level_caps', $level_id, $role_name );
 		}
 		
 		/**
