@@ -450,29 +450,24 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 		 *
 		 * @param string $addon
 		 * @param bool   $is_active
+         *
+         * @return bool
 		 */
 		public function toggle_addon( $addon, $is_active = false ) {
 			
 			global $e20r_roles_addons;
 			
 			$self = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
 			
 			if ( $self !== $addon ) {
+				$utils->log( "Not processing the expected {$e20r_roles_addons[$addon]['label']} add-on: {$addon} vs actual: {$self}" );
 				return $is_active;
 			}
 			
-			
-			$utils = Utilities::get_instance();
+   
 			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
-			
-			$expected_stub = strtolower( $this->get_class_name() );
-			
-			if ( $expected_stub !== $addon ) {
-				$utils->log( "Not processing the {$e20r_roles_addons[$addon]['label']} add-on: {$addon}" );
-				
-				return;
-			}
-			
+   
 			if ( $is_active === false ) {
 				
 				$utils->log( "Deactivating the add-on so disable the license" );
@@ -1096,9 +1091,12 @@ $stub = apply_filters( "e20r_roles_addon_example_addon_name", null );
 
 $e20r_roles_addons[ $stub ] = array(
 	'class_name'            => 'Example_Addon',
-	'is_active'             => false, // ( get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
+	'is_active'             => false,
 	'status'                => 'deactivated',
-	'label'                 => 'Roles: Example Add-on',
+//	'is_active'             => ( get_option( "e20r_roles_{$stub}_enabled", false ) == 1 ? true : false ),
+//	'status'                => ( get_option( "e20r_roles_{$stub}_enabled", false ) == 1 ? 'active' : 'deactivated' ),
+	'disabled'              => true,
+    'label'                 => 'Roles: Example Add-on',
 	'admin_role'            => 'manage_options',
 	'required_plugins_list' => array(
 		'buddypress/buddypress.php'                     => array(
