@@ -184,26 +184,27 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		public function add_new_license_info( $settings ) {
 			
 			global $e20r_roles_addons;
+			$utils = Utilities::get_instance();
 			
 			if ( ! isset( $settings['new_licenses'] ) ) {
 				$settings['new_licenses'] = array();
 			}
 			
-			if ( WP_DEBUG ) {
-				error_log( "Have " . count( $settings['new_licenses'] ) . " new to process already" );
-			}
+			$stub = strtolower( $this->get_class_name() );
+			$utils->log( "Have " . count( $settings['new_licenses'] ) . " processed already ({$stub})" );
+			
 			
 			$settings['new_licenses'][] = array(
-				'label_for'     => 'bbpress_roles',
-				'fulltext_name' => $e20r_roles_addons['bbpress_roles']['label'],
-				'new_product'   => 'bbpress_roles',
+				'label_for'     => $stub,
+				'fulltext_name' => $e20r_roles_addons[ $stub ]['label'],
+				'new_product'   => $stub,
 				'option_name'   => "e20r_license_settings",
 				'name'          => 'license_key',
 				'input_type'    => 'password',
 				'value'         => null,
 				'email_field'   => "license_email",
 				'email_value'   => null,
-				'placeholder'   => sprintf( __( "Paste the purchased E20R Roles %s key here", "e20r-licensing" ), $e20r_roles_addons['bbpress_roles']['label'] ),
+				'placeholder'   => sprintf( __( "Paste the purchased E20R Roles %s key here", "e20r-licensing" ), $e20r_roles_addons[ $stub ]['label'] ),
 			);
 			
 			return $settings;
@@ -366,6 +367,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				
 				$replacement_plural   = $this->load_option( 'topic_label_plural' );
 				$replacement_singular = $this->load_option( 'topic_label' );
+				
+				if ( empty( $replacement_plural ) ) {
+					$replacement_plural = __( "Topics", E20R_Roles_For_PMPro::plugin_slug );
+				}
+				
+				if ( empty( $replacement_singular ) ) {
+					$replacement_singular = __( "Topic", E20R_Roles_For_PMPro::plugin_slug );
+				}
 				
 				if ( preg_match( "/topic/i", $text ) ) {
 					
@@ -1312,7 +1321,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			if ( isset( $level_settings[ $level_id ] ) ) {
 				
-				$preserve       = array_diff_assoc( $this->select_capabilities( $level_settings[ $level_id ]['forum_permission'] ), $capabilities );
+				$preserve = array_diff_assoc( $this->select_capabilities( $level_settings[ $level_id ]['forum_permission'] ), $capabilities );
 				
 				$utils->log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
 				$utils->log( "Adding/Removing the {$level_settings[$level_id]['forum_permission']} capabilities: " . print_r( $level_settings[ $level_id ]['capabilities'], true ) );
@@ -1320,9 +1329,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				
 				$capabilities = $preserve + $level_settings[ $level_id ]['capabilities'];
 			}
-			
-			// Clear up the array
-			$capabilities = array_unique( $capabilities );
 			
 			$utils->log( "Loaded the bbPress Forum roles required for {$level_id}: " . print_r( $capabilities, true ) );
 			
@@ -1438,25 +1444,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		}
 		
 		/**
-		 * Return the class name (sans namespace) if possible
-		 *
-		 * @param $string
-		 *
-		 * @return string
-		 */
-		private function maybe_extract_class_name( $string ) {
-			
-			if ( WP_DEBUG ) {
-				error_log( "Supplied (potential) class name: {$string}" );
-			}
-			
-			$class_array = explode( '\\', $string );
-			$name        = $class_array[ ( count( $class_array ) - 1 ) ];
-			
-			return $name;
-		}
-		
-		/**
 		 * Action Hook: Enable/disable this add-on. Will clean up if we're being deactivated & configured to do so
 		 *
 		 * @action e20r_roles_addon_toggle_addon
@@ -1470,28 +1457,24 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			global $e20r_roles_addons;
 			
-			$self = strtolower( $this->get_class_name() );
+			$self  = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
 			
 			if ( $self !== $addon ) {
-				return $is_active;
-			}
-			
-			$utils = Utilities::get_instance();
-			$utils->log( "In toggle_addon action handler for the bbPress add-on" );
-			
-			if ( 'bbpress_roles' !== $addon ) {
-				$utils->log( "Not processing the bbPress add-on: {$addon}" );
+				$utils->log( "Not running the expected {$e20r_roles_addons[$addon]['label']} add-on: {$addon} vs actual: {$self}" );
 				
 				return $is_active;
 			}
 			
-			if ( $is_active === false ) {
+			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
+			
+			if ( false === $is_active ) {
 				
 				$utils->log( "Deactivating the add-on so disable the license" );
 				Licensing\Licensing::deactivate_license( $addon );
 			}
 			
-			if ( $is_active === false && true == $this->load_option( 'deactivation_reset' ) ) {
+			if ( false === $is_active && true == $this->load_option( 'deactivation_reset' ) ) {
 				
 				// TODO: During add-on deactivation, remove all capabilities for levels & user(s)
 				// FixMe: Delete the option entry/entries from the Database
@@ -1499,10 +1482,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
 			}
 			
-			$e20r_roles_addons[ $addon ]['is_active'] = $is_active;
 			
-			$utils->log( "Setting the {$addon} option to {$is_active}" );
-			update_option( "e20r_{$addon}_enabled", $is_active, true );
+			$e20r_roles_addons[ $addon ]['is_active'] = $is_active;
+			$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
+			$utils->log( "Setting the {$addon} option to {$e20r_roles_addons[ $addon ]['status']}" );
+			update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
+			
+			return $is_active;
 		}
 		
 		/**
@@ -2044,24 +2030,22 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public function save_level_settings( $level_id, $active_addons ) {
 			
+			$utils = Utilities::get_instance();
+			
 			if ( ! in_array( 'bbpress_roles', $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles add-on is not active. Nothing to do!" );
-				}
+				
+				$utils->log( "bbPress Roles add-on is not active. Nothing to do!" );
 				
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles:  No level ID specified!" );
-				}
+				$utils->log( "bbPress Roles:  No level ID specified!" );
 				
 				return false;
 			}
 			
-			$utils          = Utilities::get_instance();
 			$level_settings = $this->load_option( 'level_settings' );
 			
 			if ( ! isset( $level_settings[ $level_id ] ) ) {
@@ -2073,9 +2057,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$level_settings[ $level_id ]['forum_permission'] = $utils->get_variable( 'e20r_bbpress_settings-forum_permission', array() );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
-			}
+			$utils->log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
 			
 			if ( isset( $level_settings[ - 1 ] ) ) {
 				unset( $level_settings[ - 1 ] );
@@ -2092,9 +2074,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$this->settings['level_settings'] = $level_settings;
 			$this->save_settings();
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current settings: " . print_r( $this->settings, true ) );
-			}
+			$utils->log( "Current settings: " . print_r( $this->settings, true ) );
 		}
 		
 		/**
@@ -2745,10 +2725,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public function save_settings( $settings = null ) {
 			
-		    if ( !empty( $settings ) ) {
-			    $this->settings = $settings;
-		    }
-		    
+			if ( ! empty( $settings ) ) {
+				$this->settings = $settings;
+			}
+			
 			update_option( $this->option_name, $this->settings, true );
 		}
 		
@@ -2773,7 +2753,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					$new_caps[ $capabilities[ $key ] ] = true;
 				}
 				
-				$role = add_role( $role_name, "{$level->name} Role", $new_caps );
+				$role = add_role( $role_name, "{$level->name} Role (Forum)", $new_caps );
 			}
 		}
 		
@@ -2821,14 +2801,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 							$new_caps = array();
 							
 							foreach ( $numeric_keys as $key ) {
-           
-							    if ( ! is_numeric( $level_settings[ $level->id ]['capabilities'][ $key ] ) ) {
-								    $new_caps[ $level_settings[ $level->id ]['capabilities'][ $key ] ] = true;
-							    }
+								
+								if ( ! is_numeric( $level_settings[ $level->id ]['capabilities'][ $key ] ) ) {
+									$new_caps[ $level_settings[ $level->id ]['capabilities'][ $key ] ] = true;
+								}
 							}
 						}
 						
-						$level_settings[$level->id]['capabilities'] = $new_caps;
+						$level_settings[ $level->id ]['capabilities'] = $new_caps;
 					}
 					
 					$utils->log( "Role {$role->name} now has: " . print_r( $role->capabilities, true ) );
@@ -2992,10 +2972,14 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 	// Configure the add-on (global settings array)
 	global $e20r_roles_addons;
 	
-	$e20r_roles_addons['bbpress_roles'] = array(
+	add_filter( "e20r_roles_addon_bbpress_roles_name", array( bbPress_Roles::get_instance(), 'get_class_name' ) );
+	$stub = strtolower( apply_filters( "e20r_roles_addon_bbpress_roles_name", null ) );
+	
+	$e20r_roles_addons[$stub] = array(
 		'class_name'            => 'bbPress_Roles',
-		'is_active'             => ( get_option( 'e20r_bbpress_roles_enabled', false ) == 1 ? true : false ),
+		'is_active'             => ( get_option( "e20r_roles_{$stub}_enabled", false ) == 1 ? true : false ),
 		'status'                => 'deactivated',
+		'disabled'              => false,
 		'label'                 => 'bbPress Roles',
 		'admin_role'            => 'manage_options',
 		'required_plugins_list' => array(
@@ -3007,11 +2991,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				'name' => 'Paid Memberships Pro',
 				'url'  => 'https://wordpress.org/plugins/paid-memberships-pro/',
 			),
-			'pmpro-bbpress/pmpro-bbpress.php'               => array(
-				'name' => 'Paid Memberships Pro - bbPress Add-on',
-				'url'  => 'https://wordpress.org/plugins/pmpro-bbpress/',
-			),
-		
 		),
 	);
 	
