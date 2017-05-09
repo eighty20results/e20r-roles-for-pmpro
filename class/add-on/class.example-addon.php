@@ -545,7 +545,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 				self::get_instance(),
 				'add_new_license_info',
 			), 10, 1 );
-			add_filter( 'e20r_roles_addon_options_buddypress_Roles', array(
+			add_filter( 'e20r_roles_addon_options_example_addon', array(
 				self::get_instance(),
 				'register_settings',
 			), 10, 1 );
