@@ -132,7 +132,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 		public static function default_capabilities() {
 			
 			// Always allow members to read posts
-			return apply_filters( 'e20_pmpro_roles_default_capabilities', array( 'read' => 1 ) );
+			return apply_filters( 'e20_pmpro_roles_default_capabilities', array( 'read' => true ) );
 		}
 		
 		/**
@@ -159,29 +159,18 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			
 			$default_capabilities = self::default_capabilities();
 			
-			/*
-			// Get the capabilities we'll filter & assign
-			if ( empty( $this->level_settings['capabilities'] ) ) {
-				
-				$default_capabilities = self::default_capabilities();
-			} else {
-				
-				$default_capabilities = $this->level_settings['capabilities'];
-			}
-			*/
-			
 			$capabilities = apply_filters( "e20r_roles_general_level_capabilities", $default_capabilities, $role_name, $level_id );
-			$capabilities = apply_filters( "e20r_roles_level_{$role_name}_capabilities", $capabilities, $level_id );
+			$capabilities = apply_filters( "e20r_roles_level_{$level_id}_capabilities", $capabilities, $level_id, $role_name );
 			
 			// Save the capabilities
-			$this->level_settings['capabilities'] = array_unique( $capabilities );
+			$this->level_settings['capabilities'] = $capabilities;
 			
 			$utils->log( "Testing if {$role_name} exists/is defined" );
 			
 			if ( false === $this->role_exists( $role_name ) ) {
 				
 				$level    = pmpro_getLevel( $level_id );
-				$role_def = add_role( $role_name, $level->name, $capabilities );
+				$role_def = add_role( $role_name, "{$level->name} (level)", $capabilities );
 			} else {
 				$role_def = get_role( $role_name );
 			}
@@ -192,16 +181,18 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 				return false;
 			}
 			
-			$existing_caps = $role_def->capabilities;
+			$existing_caps = array_keys( $role_def->capabilities );
 			
 			$utils->log( "Current capabilities assigned to {$role_name}: " . print_r( $existing_caps, true ) );
 			
 			// Removing all existing capabilities from the role (we're resetting, remember!?!)
-			foreach ( $existing_caps as $cap => $state ) {
+			foreach ( $existing_caps as $cap ) {
+				
+				$utils->log("Processing (removing?) {$cap} from {$role_name}");
 				
 				$defaults = self::default_capabilities();
 				
-				if ( ! in_array( $cap, $defaults ) ) {
+				if ( is_numeric( $cap ) || ! in_array( $cap, array_keys( $defaults ) ) ) {
 					
 					$utils->log( "Removing {$cap} from role {$role_name}" );
 					
@@ -210,10 +201,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 			}
 			
 			// Add the required/requested capabilities
-			foreach ( $this->level_settings['capabilities'] as $capability ) {
+			foreach ( array_keys( $this->level_settings['capabilities'] ) as $capability ) {
 				
 				$utils->log( "Adding {$capability} to role {$role_name}" );
-				$role_def->add_cap( $capability );
+				
+				if ( !is_numeric( $capability ) ) {
+					$role_def->add_cap( $capability );
+				}
 			}
 			
 			// Save settings & return the role definition if successful
@@ -411,13 +405,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Role_Definitions' ) ) {
 		public function role_exists( $role_name ) {
 			
 			$role = get_role( $role_name );
+			$utils = Utilities::get_instance();
 			
 			if ( ! empty( $role ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Role {$role_name} exists in the system" );
-					error_log( "Capabilities: " . print_r( $role->capabilities, true ) );
-				}
+				$utils->log( "Role {$role_name} exists in the system" );
+				$utils->log( "Capabilities: " . print_r( $role->capabilities, true ) );
 				
 				return true;
 			}
