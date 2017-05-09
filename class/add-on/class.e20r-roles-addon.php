@@ -121,9 +121,9 @@ class E20R_Roles_Addon {
 		$licensed = false;
 		
 		global $e20r_roles_addons;
-		$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_{$stub}_enabled", false );
+		$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_roles_{$stub}_enabled", false );
 		
-		$utils->log("is_active setting: " . $e20r_roles_addons[$stub]['is_active']);
+		$utils->log("is_active setting for {$stub}: " . $e20r_roles_addons[$stub]['is_active']);
 		
 		if ( true == $e20r_roles_addons[$stub]['is_active'] ) {
 			$enabled = true;
@@ -132,9 +132,9 @@ class E20R_Roles_Addon {
 		$utils->log("The {$stub} add-on is enabled? {$enabled}");
 		$force = false;
 		
-		if (WP_DEBUG) {
+		if ( true === $enabled && 'deactivated' === $e20r_roles_addons[$stub]['status'] ) {
 			$utils->log("Forcing a remote check of the license" );
-			$force = false;
+			$force = true;
 		}
 		
 		$licensed = Licensing\Licensing::is_licensed( $stub, $force );
@@ -150,6 +150,25 @@ class E20R_Roles_Addon {
 		}
 		
 		return $e20r_roles_addons[ $stub ]['is_active'];
+	}
+	
+	/**
+	 * Extract the class name (for classes with namespaces)
+	 *
+	 * @param $string
+	 *
+	 * @return mixed
+	 */
+	protected function maybe_extract_class_name( $string ) {
+		
+		$utils = Utilities::get_instance();
+		$utils->log( "Supplied (potential) class name: {$string}" );
+		
+		$class_array = explode( '\\', $string );
+		$name        = $class_array[ ( count( $class_array ) - 1 ) ];
+		
+		$utils->log("Using {$name} to load class");
+		return $name;
 	}
 	
 	public static function check_requirements( $stub ) {
@@ -242,6 +261,25 @@ class E20R_Roles_Addon {
 	 * @return mixed $validated
 	 */
 	public function validate_settings( $input ) {
+		
+		global $e20r_roles_addons;
+		$utils = Utilities::get_instance();
+		
+		foreach( $input as $i_key => $i_value  ) {
+			
+			// Processing the 'is active' checkbox in the parent class only
+			if ( false != preg_match( '/is_(.*)_active', $i_key, $matches ) ) {
+				
+				$utils->log("Processing checkbox for: " . print_r( $matches, true ));
+				/*
+				unset( $input[$i_key] );
+				*/
+				/*
+				global $e20r_roles_addons;
+				$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_addon_{$stub}_enabled", false );
+				*/
+			}
+		}
 		
 		return $input;
 	}
