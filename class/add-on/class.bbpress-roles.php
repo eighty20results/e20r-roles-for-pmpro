@@ -1309,16 +1309,16 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 			
 			$level_settings = $this->load_option( 'level_settings' );
-			$preserve       = array_diff( $this->select_capabilities( $level_settings[ $level_id ]['forum_permission'] ), $capabilities );
-			
-			$utils->log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
 			
 			if ( isset( $level_settings[ $level_id ] ) ) {
 				
+				$preserve       = array_diff_assoc( $this->select_capabilities( $level_settings[ $level_id ]['forum_permission'] ), $capabilities );
+				
+				$utils->log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
 				$utils->log( "Adding/Removing the {$level_settings[$level_id]['forum_permission']} capabilities: " . print_r( $level_settings[ $level_id ]['capabilities'], true ) );
 				$utils->log( "... for the existing level specific capabilities: " . print_r( $capabilities, true ) );
 				
-				$capabilities = array_merge( $preserve, $level_settings[ $level_id ]['capabilities'] );
+				$capabilities = $preserve + $level_settings[ $level_id ]['capabilities'];
 			}
 			
 			// Clear up the array
