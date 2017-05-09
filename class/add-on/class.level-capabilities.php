@@ -26,11 +26,11 @@ use E20R\Utilities\Utilities;
 use E20R\Licensing;
 use Stripe\Card;
 
-if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
+if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 	
-	class Configure_Capabilities extends E20R_Roles_Addon {
-	    
-		const CACHE_GROUP = 'configure_capabilities';
+	class Level_Capabilities extends E20R_Roles_Addon {
+		
+		const CACHE_GROUP = 'level_capabilities';
 		
 		/**
 		 * The name of this class
@@ -40,7 +40,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		private $class_name;
 		
 		/**
-		 * @var Configure_Capabilities
+		 * @var Level_Capabilities
 		 */
 		private static $instance;
 		
@@ -49,17 +49,18 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		 *
 		 * @var string $option_name
 		 */
-		private $option_name = 'e20r_ao_configure_capabilities';
-  
+		private $option_name = 'e20r_ao_level_capabilities';
+		
 		public function set_stub_name( $name = null ) {
 			
-		    $name = strtolower( $this->get_class_name() );
+			$name = strtolower( $this->get_class_name() );
+			
 			return $name;
 		}
 		
 		
 		/**
-		 *  Configure_Capabilities constructor.
+		 *  Level_Capabilities constructor.
 		 */
 		protected function __construct() {
 			
@@ -72,6 +73,11 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			$this->define_settings();
 		}
 		
+		/**
+		 * Get and return the product/add-on name
+		 *
+		 * @return string
+		 */
 		public function get_class_name() {
 			
 			if ( empty( $this->class_name ) ) {
@@ -80,18 +86,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			
 			return $this->class_name;
 		}
-		
-		private function maybe_extract_class_name( $string ) {
-			
-		    $utils = Utilities::get_instance();
-            $utils->log( "Supplied (potential) class name: {$string}" );
-			
-			$class_array = explode( '\\', $string );
-			$name        = $class_array[ ( count( $class_array ) - 1 ) ];
-			
-			return $name;
-		}
-		
+  
 		/**
 		 * Load actions & hooks for the add-on
 		 *
@@ -102,9 +97,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			$class      = self::get_instance();
 			$utils      = Utilities::get_instance();
 			$class_name = $class->get_class_name();
-            
-            $utils->log( "Loading the {$class_name} class action(s) " );
-            
+			
+			$utils->log( "Loading the {$class_name} class action(s) " );
+			
 			global $e20r_roles_addons;
 			
 			if ( is_null( $stub ) ) {
@@ -127,16 +122,15 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		public function add_new_license_info( $settings ) {
 			
 			global $e20r_roles_addons;
+			$utils = Utilities::get_instance();
 			
 			if ( ! isset( $settings['new_licenses'] ) ) {
 				$settings['new_licenses'] = array();
 			}
 			
-			if ( WP_DEBUG ) {
-				error_log( "Have " . count( $settings['new_licenses'] ) . " new to process already" );
-			}
-			
 			$stub = strtolower( $this->get_class_name() );
+			
+			$utils->log( "Have " . count( $settings['new_licenses'] ) . " processed already ({$stub})" );
 			
 			$settings['new_licenses'][] = array(
 				'label_for'     => $stub,
@@ -153,7 +147,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			
 			return $settings;
 		}
-  
+		
 		/**
 		 * Return a specific type of capabilities
 		 *
@@ -217,7 +211,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			
 			return $mapped;
 		}
-  
+		
 		/**
 		 * Filter Handler: Access filter for bbPress/PMPro memership (override)
 		 *
@@ -246,7 +240,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 				return $has_access;
 			}
 			
-            // TODO Check access?
+			// TODO Check access?
 			
 			return $has_access;
 		}
@@ -269,39 +263,27 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			
 			global $e20r_roles_addons;
 			
-			$stub = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
+			$stub  = strtolower( $this->get_class_name() );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
-			}
+			$utils->log( "Adding the Level Capabilities to the membership level capabilities? (Role: {$role_name})" );
 			
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				return $capabilities;
 			}
 			
 			$level_settings = $this->load_option( 'level_settings' );
-			$preserve       = array_diff( $this->select_capabilities( $level_settings[ $level_id ]['capabilities'] ), $capabilities );
-			
-			if ( WP_DEBUG ) {
-				error_log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
-			}
 			
 			if ( isset( $level_settings[ $level_id ] ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Adding/Removing the {$level_settings[$level_id]['capabilities']} capabilities: " . print_r( $level_settings[ $level_id ]['capabilities'], true ) );
-					error_log( "... for the existing level specific capabilities: " . print_r( $capabilities, true ) );
-				}
+				$preserve = array_diff_assoc( $level_settings[ $level_id ]['capabilities'], $capabilities );
+				$utils->log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
+				$utils->log( "... for the existing level specific capabilities: " . print_r( $capabilities, true ) );
 				
-				$capabilities = array_merge( $preserve, $level_settings[ $level_id ]['capabilities'] );
+				$capabilities = $preserve + $level_settings[ $level_id ]['capabilities'];
 			}
 			
-			// Clear up the array
-			$capabilities = array_unique( $capabilities );
-			
-			if ( WP_DEBUG ) {
-				error_log( "Loaded the bbPress Forum roles required for {$level_id}: " . print_r( $capabilities, true ) );
-			}
+			$utils->log( "Returning the Level capabilities requested for {$level_id}/{$role_name}: " . print_r( $capabilities, true ) );
 			
 			return $capabilities;
 		}
@@ -329,7 +311,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		 * Loads the default settings (keys & values)
 		 *
 		 * TODO: Specify settings for this add-on
-         *
+		 *
 		 * @return array
 		 *
 		 * @access private
@@ -338,11 +320,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		private function load_defaults() {
 			
 			return array(
-				'setting_1'   => false,
 				'deactivation_reset' => false,
 				'level_settings'     => array(
 					- 1 => array(
-						'capabilities'     => array(),
+						'capabilities'    => array(),
 						'permission_name' => 'no_access',
 					),
 				),
@@ -370,28 +351,24 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		 *
 		 * @param string $addon
 		 * @param bool   $is_active
+		 *
+		 * @return bool
 		 */
 		public function toggle_addon( $addon, $is_active = false ) {
 			
 			global $e20r_roles_addons;
 			
-			$self = strtolower( $this->get_class_name() );
+			$self  = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
 			
 			if ( $self !== $addon ) {
+				
+				$utils->log( "Not running the expected {$e20r_roles_addons[$addon]['label']} add-on: {$addon} vs actual: {$self}" );
+				
 				return $is_active;
 			}
 			
-			
-			$utils = Utilities::get_instance();
 			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
-			
-			$expected_stub = strtolower( $this->get_class_name() );
-			
-			if ( $expected_stub !== $addon ) {
-				$utils->log( "Not processing the {$e20r_roles_addons[$addon]['label']} add-on: {$addon}" );
-				
-				return;
-			}
 			
 			if ( $is_active === false ) {
 				
@@ -408,9 +385,11 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			}
 			
 			$e20r_roles_addons[ $addon ]['is_active'] = $is_active;
+			$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
+			$utils->log( "Setting the {$addon} add-on to {$e20r_roles_addons[ $addon ]['status']} / " . ( $is_active ? 'Yes' : 'No' ) );
+			update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
 			
-			$utils->log( "Setting the {$addon} option to {$is_active}" );
-			update_option( "e20r_{$addon}_enabled", $is_active, true );
+			return $is_active;
 		}
 		
 		/**
@@ -444,7 +423,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			global $e20r_roles_addons;
 			
 			// TODO: Set the filter name to match the sub for this plugin.
-   
+			
 			/**
 			 * Toggle ourselves on/off, and handle any deactivation if needed.
 			 */
@@ -461,11 +440,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 				self::get_instance(),
 				'add_capabilities_to_role',
 			), 10, 3 );
-			add_filter( 'e20r-license-add-new-licenses', array(
-				self::get_instance(),
-				'add_new_license_info',
-			), 10, 1 );
-			add_filter( 'e20r_roles_addon_options_buddypress_Roles', array(
+			add_filter( 'e20r-license-add-new-licenses', array( self::get_instance(), 'add_new_license_info' ), 10, 1 );
+			add_filter( 'e20r_roles_addon_options_level_capabilities', array(
 				self::get_instance(),
 				'register_settings',
 			), 10, 1 );
@@ -473,6 +449,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			if ( true === parent::is_enabled( $stub ) ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
+				
+				self::$instance->add_level_filters();
 				
 				/**
 				 * Membership related settings for role(s) add-on
@@ -486,11 +464,83 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 					self::get_instance(),
 					'delete_level_settings',
 				), 10, 2 );
-    
-				// self::get_instance()->configure_forum_admin_capabilities();
+				
+				add_action( 'e20r_roles_set_level_caps', array(
+					self::get_instance(),
+					'configure_level_capabilities',
+				), 10, 2 );
 			}
 		}
 		
+		public function add_level_filters() {
+			
+			$utils          = Utilities::get_instance();
+			$level_settings = $this->load_option( 'level_settings' );
+			
+			if ( empty( $level_settings ) ) {
+			    $level_settings = array();
+            }
+            
+			foreach ( $level_settings as $level_id => $settings ) {
+				
+				$utils->log( "Loading capability filter for level {$level_id}" );
+				
+				// "e20r_roles_level_{$level_id}_capabilities", $capabilities, $level_id, $role_name
+				add_filter( "e20r_roles_level_{$level_id}_capabilities", array( $this, 'return_level_caps' ), 10, 3 );
+			}
+		}
+		
+		/**
+		 * Update the level specific capabilities for the level role
+		 *
+		 * @filter e20r_roles_level_{$level_id}_capabilities
+		 *
+		 * @param array  $capabilities
+		 * @param int    $level_id
+		 * @param string $role_name
+		 *
+		 * @return array
+		 */
+		public function return_level_caps( $capabilities, $level_id, $role_name ) {
+			
+			$utils = Utilities::get_instance();
+			
+			$level_settings = $this->load_option( 'level_settings' );
+			
+			if ( $level_caps = $level_settings[ $level_id ]['capabilities'] ) {
+				$capabilities = $capabilities + $level_caps;
+			}
+			
+			$utils->log( "Returning updated capability list for level ID {$level_id}: " . count( $capabilities ) . " capabilities being added" );
+			
+			return $capabilities;
+		}
+		
+		
+		public function configure_level_capabilities( $level_id, $role_name ) {
+			
+			$role  = get_role( $role_name );
+			$utils = Utilities::get_instance();
+			
+			if ( empty( $role ) && 0 !== $level_id ) {
+				
+				$level          = pmpro_getLevel( $level_id );
+				$level_settings = $this->load_option( 'level_settings' );
+				$capabilities   = $level_settings[ $level_id ]['capabilities'];
+				
+				if ( empty( $level ) ) {
+					$utils->log( "Error: Roles for Level {$level_id} do not exists???" );
+					
+					return false;
+				}
+				
+				$role_descr = "{$level->name} (Level)";
+				
+				return add_role( $role_name, $role_descr, $capabilities );
+			}
+			
+			return false;
+		}
 		
 		/**
 		 * Append this add-on to the list of configured & enabled add-ons
@@ -499,7 +549,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			
 			$class = self::get_instance();
 			$name  = strtolower( $class->get_class_name() );
-
+			
 			parent::is_enabled( $name );
 		}
 		
@@ -520,15 +570,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			
 			$settings['section'] = array(
 				array(
-					'id'              => 'e20r_configure_capabilities_role_global',
-					'label'           => __( "E20R Roles: Configure Capabilities Add-on Settings" ),
+					'id'              => 'e20r_level_capabilities_role_global',
+					'label'           => __( "E20R Roles: Level Capability Settings" ),
 					'render_callback' => array( $this, 'render_settings_text' ),
 					'fields'          => array(
-						array(
-							'id'              => 'global_anon_read',
-							'label'           => __( "Non-member access", E20R_Roles_For_PMPro::plugin_slug ),
-							'render_callback' => array( $this, 'render_select' ),
-						),
 						array(
 							'id'              => 'deactivation_reset',
 							'label'           => __( "Clean up on Deactivate", E20R_Roles_For_PMPro::plugin_slug ),
@@ -568,7 +613,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		public function validate_settings( $input ) {
 			
 			if ( WP_DEBUG ) {
-				error_log( "Input for save in Example_Addon:: " . print_r( $input, true ) );
+				error_log( "Input for save in Level_Capabilities:: " . print_r( $input, true ) );
 			}
 			
 			$defaults = $this->load_defaults();
@@ -578,7 +623,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 				if ( false !== stripos( 'level_settings', $key ) && isset( $input[ $key ] ) ) {
 					
 					foreach ( $input['level_settings'] as $level_id => $settings ) {
-      
+						
 						$this->settings['level_settings'][ $level_id ]['capabilities'] = $this->select_capabilities( $settings['forum_permission'] );
 					}
 					
@@ -643,7 +688,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		 */
 		public function delete_level_settings( $level_id, $active_addons ) {
 			
-		    $name = strtolower( $this->get_class_name() );
+			$name = strtolower( $this->get_class_name() );
 			
 			if ( ! in_array( $name, $active_addons ) ) {
 				if ( WP_DEBUG ) {
@@ -656,7 +701,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			if ( empty( $level_id ) ) {
 				
 				if ( WP_DEBUG ) {
-					error_log( "Configure Capabiltiies:  No level ID specified!" );
+					error_log( "Configure Capabilities:  No level ID specified!" );
 				}
 				
 				return false;
@@ -681,52 +726,50 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		 */
 		public function save_level_settings( $level_id, $active_addons ) {
 			
-			$stub = strtolower( $this->get_class_name() );
+			$stub  = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
+			
 			if ( ! in_array( $stub, $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles add-on is not active. Nothing to do!" );
-				}
+				
+				$utils->log( "Level Capabilities add-on is not active. Nothing to do!" );
 				
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles:  No level ID specified!" );
-				}
+				$utils->log( "Level Capabilities:  No level ID specified!" );
 				
 				return false;
 			}
 			
-			$utils          = Utilities::get_instance();
 			$level_settings = $this->load_option( 'level_settings' );
 			
 			if ( ! isset( $level_settings[ $level_id ] ) ) {
 				$level_settings[ $level_id ] = array(
-					'capabilities'     => array(),
-					'forum_permission' => 'no_access',
+					'capabilities' => array(),
 				);
 			}
 			
-			$level_settings[ $level_id ]['forum_permission'] = $utils->get_variable( 'e20r_buddypress_settings-forum_permission', array() );
+			$desired      = $utils->get_variable( 'e20r_roles_capabilities', array() );
+			$capabilities = array();
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
+			foreach ( $desired as $cap_name ) {
+				$capabilities[ $cap_name ] = true;
 			}
+			
+			$utils->log( "Current capabilities for {$level_id}: " . print_r( $capabilities, true ) );
 			
 			if ( isset( $level_settings[ - 1 ] ) ) {
 				unset( $level_settings[ - 1 ] );
 			}
 			
-			$level_settings[ $level_id ]['capabilities'] = $this->select_capabilities( $level_settings[ $level_id ]['forum_permission'] );
+			$level_settings[ $level_id ]['capabilities'] = $capabilities;
 			
 			$this->settings['level_settings'] = $level_settings;
-			$this->save_settings();
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current settings: " . print_r( $this->settings, true ) );
-			}
+			$utils->log( "Saving settings: " . print_r( $this->settings, true ) );
+			$this->save_settings();
 		}
 		
 		/**
@@ -738,7 +781,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		}
 		
 		/**
-		 * Adds the membership level specific bbPress role settings
+		 * Adds the level specific Capability settings to the PMPro Membership Level settings page
 		 *
 		 * @access public
 		 * @since  1.0
@@ -749,44 +792,119 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 			
 			if ( ! isset( $level_settings[ $level_id ] ) ) {
 				$level_settings[ $level_id ] = array(
-					'capabilities'     => array(),
-					'forum_permission' => 'no_access',
+					'capabilities' => array(),
 				);
 			}
 			
-			$forum_permission = $level_settings[ $level_id ]['forum_permission'];
+			$selected_capabilities = empty( $level_settings[ $level_id ]['capabilities'] ) ? array() : $level_settings[ $level_id ]['capabilities'];
+			$all_capabilities      = $this->get_defined_capabilities();
 			
-			if ( is_array( $forum_permission ) ) {
-				$forum_permission = $forum_permission[0];
-			}
-			
+			$rows = floor( count( $all_capabilities ) / 3 )
 			?>
-            <h4><?php _e( 'Capabilities Configuration', E20R_Roles_For_PMPro::plugin_slug ); ?></h4>
-            <table class="form-table">
-                <tbody>
-                <tr class="e20r-example-settings">
-                    <th scope="row" valign="top"><label
-                                for="e20r-roles-capabilities-permissions"><?php _e( "Capabilities", E20R_Roles_For_PMPro::plugin_prefix ); ?></label>
+            <h4><?php _e( 'Level Specific Capabilities', E20R_Roles_For_PMPro::plugin_slug ); ?></h4>
+            <button class="e20r-show-table button-secondary"><?php _e( "Show Capability List", E20R_Roles_For_PMPro::plugin_slug ); ?></button>
+            <table class="form-table e20r-hide-table">
+                <thead>
+                <tr>
+                    <th colspan="3">
+                        <small><?php printf( __( 'Active members with this membership level are given the following (checked) <a href="%s" target="_blank">capabilities</a> for this site...', E20R_Roles_For_PMPro::plugin_slug ), 'https://codex.wordpress.org/Roles_and_Capabilities' ); ?></small>
                     </th>
-                    <td class="e20r-capabilities-settings-select">
-                        <select name="e20r_example_settings-forum_permission" id="e20r-roles-capabilities-permissions">
-                            <option value="no_access" <?php selected( 'no_access', $forum_permission ); ?>><?php _e( "No Access", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
-
-                            <option value="read_only" <?php selected( 'read_only', $forum_permission ); ?>><?php _e( "Read Only", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
-                            <option value="add_replies" <?php selected( 'add_replies', $forum_permission ); ?>><?php _e( "Can reply to existing topic(s)", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
-                            <option value="add_threads" <?php selected( 'add_threads', $forum_permission ); ?>><?php _e( "Can create new topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
-                            <option value="add_forum" <?php echo selected( 'add_forum', $forum_permission ); ?>><?php _e( "Can create new forum(s), topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
-                            <option value="forum_support" <?php selected( 'forum_support', $forum_permission ); ?>><?php _e( "Has support rights to forum(s)", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
-                            <option value="forum_admin" <?php selected( 'forum_admin', $forum_permission ); ?>><?php _e( "Has full admin rights for bbPress", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
-                        </select><br/>
-                        <small><?php _e( "This membership level grants an active member one or more of the following capabilities for the user of this site...", E20R_Roles_For_PMPro::plugin_slug ); ?></small>
+                </tr>
+                </thead>
+                <tbody class="e20r-roles-capability-selection">
+                <tr class="e20r-roles-capability-settings">
+                    <input type="hidden" name="e20r-roles-capability-capabilities_level"
+                           value="<?php esc_attr_e( $level_id ) ?>"/>
+                    <th scope="row" valign="top"><label
+                                for="e20r-roles-capability-selected_capabilities_level"><?php _e( "Capability list", E20R_Roles_For_PMPro::plugin_prefix ); ?></label>
+                        <br/>
+                        <button class="e20r-clear-all button-secondary"><?php _e( "Clear all", E20R_Roles_For_PMPro::plugin_slug ); ?></button>
+                    </th>
+                    <td class="e20r-roles-capability-level-selection">
+                        <table class="level_selection_table">
+                            <tbody>
+							<?php
+							$col_counter = 1;
+							
+							foreach ( $all_capabilities as $cap ) {
+								
+								if ( 1 === $col_counter ) { ?>
+                                    <tr class="e20r-roles-capability-row">
+									<?php
+								} ?>
+                                <td class="e20r-roles-capability-checkbox">
+                                    <input type="checkbox" name="e20r_roles_capabilities[]" class="e20r-role-checkbox"
+                                           value="<?php esc_attr_e( $cap ); ?>" <?php echo $this->checked( $cap, $selected_capabilities ); ?> />
+                                </td>
+                                <td class="e20r-roles-capability-name"><?php esc_attr_e( $cap ); ?></td>
+								<?php
+								$col_counter ++;
+								if ( 4 == $col_counter ) {
+									
+									// Reset column counter & add row termination
+									$col_counter = 1; ?>
+                                    </tr> <!-- End of row for 3 capabilities -->
+								<?php }
+							} ?>
+                            </tr><!-- End of row in table -->
+                            </tbody>
+                        </table>
                     </td>
                 </tr>
                 </tbody>
             </table>
 			<?php
 		}
-  
+		
+		/**
+		 * Set the selected capability as "checked" in the checkbox
+		 *
+		 * @param string $capability
+		 * @param array  $selected_capabilities
+		 *
+		 * @return null|string
+		 */
+		private function checked( $capability, $selected_capabilities ) {
+			
+			return ( in_array( $capability, array_keys( $selected_capabilities ) ) ? 'checked="checked"' : null );
+		}
+		
+		/**
+		 * Get all defined capabilities for this environment
+		 */
+		private function get_defined_capabilities() {
+			
+			global $wp_roles;
+			
+			$utils = Utilities::get_instance();
+			
+			if ( WP_DEBUG ) {
+				$utils->log( "Resetting capability cache as we're in DEBUG mode" );
+				Cache::delete( 'e20r_all_capabilities', E20R_Roles_For_PMPro::cache_group );
+			}
+			
+			if ( null === ( $capability_list = Cache::get( 'e20r_all_capabilities', E20R_Roles_For_PMPro::cache_group ) ) ) {
+				
+				$capability_list = array();
+				
+				foreach ( $wp_roles->role_objects as $role ) {
+					
+					if ( is_array( $role->capabilities ) ) {
+						$capability_names = array_keys( $role->capabilities );
+						$capability_list  = array_merge( $capability_list, $capability_names );
+						$capability_list  = array_unique( $capability_list );
+					}
+				}
+				
+				if ( ! empty( $capability_list ) ) {
+					Cache::set( 'e20r_all_capabilities', $capability_list, ( 5 * MINUTE_IN_SECONDS ), E20R_Roles_For_PMPro::cache_group );
+				}
+			}
+			
+			return $capability_list;
+		}
+		
+		
 		/**
 		 * Test whether the specified role has all of the required capabilities (based on the type)
 		 *
@@ -825,61 +943,29 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 		}
 		
 		/**
-		 * Selects the capabilities for the specified access type
+		 * Returns the capabilities for the specified membership level
 		 *
-		 * @param string $type
+		 * @param int $level_id
 		 *
 		 * @return array
 		 *
 		 * @since  1.0
 		 * @access private
 		 */
-		private function select_capabilities( $type ) {
+		private function select_capabilities( $level_id ) {
 			
-			switch ( $type ) {
-				
-				case 'read_only':
-					
-					$capabilities = $this->_read_only_capabilities;
-					break;
-				
-				case 'add_replies':
-					
-					$capabilities = $this->_add_replies_capabilities;
-					break;
-				
-				case 'add_threads':
-					
-					$capabilities = $this->_add_threads_capabilities;
-					break;
-				
-				case 'add_forum':
-					
-					$capabilities = $this->_add_forum_capabilities;
-					break;
-				
-				case 'forum_support':
-					
-					$capabilities = $this->_forum_support_capabilities;
-					break;
-				
-				case 'forum_admin':
-					
-					$capabilities = $this->_forum_admin_capabilities;
-					break;
-				
-				default:
-					$capabilities = $this->_no_access_capabilities;
-			}
+			$settings = $this->load_option( 'level_settings' );
+			
+			$capabilities = $settings[ $level_id ]['capabilities'];
 			
 			return $capabilities;
 		}
-  
+		
 		
 		/**
 		 * Fetch the properties for the Configure Capabilities add-on class
 		 *
-		 * @return Configure_Capabilities
+		 * @return Level_Capabilities
 		 *
 		 * @since  1.0
 		 * @access public
@@ -896,17 +982,21 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Configure_Capabilities' ) ) {
 	}
 }
 
-add_filter( "e20r_roles_addon_configure_capabilities_name", array( Configure_Capabilities::get_instance(), 'set_stub_name' ) );
+add_filter( "e20r_roles_addon_level_capabilities_name", array(
+	Level_Capabilities::get_instance(),
+	'get_class_name',
+) );
 
 // Configure the add-on (global settings array)
 global $e20r_roles_addons;
-$stub = apply_filters( "e20r_roles_addon_configure_capabilities_name", null );
+$stub = strtolower( apply_filters( "e20r_roles_addon_level_capabilities_name", null ) );
 
 $e20r_roles_addons[ $stub ] = array(
-	'class_name'            => 'Configure_Capabilities',
-	'is_active'             => (get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
+	'class_name'            => 'Level_Capabilities',
+	'is_active'             => ( get_option( "e20r_roles_{$stub}_enabled", false ) == 1 ? true : false ),
 	'status'                => 'deactivated',
-	'label'                 => 'Configure Capabilities',
+	'disabled'              => false,
+	'label'                 => 'Level Capabilities',
 	'admin_role'            => 'manage_options',
 	'required_plugins_list' => array(
 		'paid-memberships-pro/paid-memberships-pro.php' => array(
