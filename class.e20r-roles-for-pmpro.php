@@ -5,7 +5,7 @@ Description: Manages membership roles & capabilities for Paid Memberships Pro us
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-roles-for-pmpro
 Author: Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: https://eighty20results.com/thomas-sjolshagen/
-Version: 1.9.9
+Version: 2.0
 License: GPL2
 Text Domain: e20r-roles-for-pmpro
 Domain Path: /languages
@@ -42,7 +42,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	wp_die( __( "Cannot access", E20R_Roles_For_PMPro::plugin_slug ) );
 }
 
-if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
+if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 	
 	global $e20r_roles_addons;
 	$e20r_roles_addons = array();
