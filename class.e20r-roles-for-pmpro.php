@@ -174,9 +174,22 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			}
 			
 			add_action( 'current_screen', array( $this, 'check_admin_screen' ), 10 );
+			add_action( 'http_api_curl', array( $this, 'force_tls_12' ) );
 		}
-		
-		public function check_admin_screen( $current_screen ) {
+	
+		/**
+		 * Connect to the server using TLS 1.2
+		 *
+		 * @param $handle - File handle for the pipe to the CURL process
+		 */
+		function force_tls_12( $handle ) {
+			
+			// set the CURL option to use.
+			curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
+		}
+	
+	
+	public function check_admin_screen( $current_screen ) {
 			
 		    $utils = Utilities::get_instance();
 		    
@@ -448,7 +461,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\E20R_Roles_For_PMPro' ) ) {
 			    
 				if ( true == $info['is_active'] ) {
 					
-					$addon_fields = apply_filters( "e20r_roles_addon_options_{$info['class_name']}", array() );
+					$addon_fields = apply_filters( "e20r_roles_addon_options_{$name}", array() );
 					
 					foreach ( $addon_fields as $type => $config ) {
 						
