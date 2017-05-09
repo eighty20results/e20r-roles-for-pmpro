@@ -30,7 +30,7 @@ jQuery(document).ready(function ($) {
 
     $('.widefat').after(html);
 
-    $('#repair_roles').click(function (event) {
+    $('#repair_roles').on('click', function (event) {
 
         event.preventDefault();
 
@@ -62,4 +62,16 @@ jQuery(document).ready(function ($) {
             }
         });
     });
+
+    $('.e20r-show-table').on('click', function (event) {
+        event.preventDefault();
+        $('.e20r-hide-table').toggle();
+        $(this).hide();
+    });
+
+    $('.e20r-clear-all').on('click', function (event) {
+        event.preventDefault();
+        $('.e20r-role-checkbox').removeAttr('checked');
+    });
+
 });
