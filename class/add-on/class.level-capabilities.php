@@ -798,6 +798,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			
 			$selected_capabilities = empty( $level_settings[ $level_id ]['capabilities'] ) ? array() : $level_settings[ $level_id ]['capabilities'];
 			$all_capabilities      = $this->get_defined_capabilities();
+			ksort( $all_capabilities );
 			
 			$rows = floor( count( $all_capabilities ) / 3 )
 			?>
