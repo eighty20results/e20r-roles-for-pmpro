@@ -131,12 +131,13 @@ class E20R_Roles_Addon {
 		
 		$utils->log("The {$stub} add-on is enabled? {$enabled}");
 		$force = false;
-		
-		if ( false === $enabled ) {
+
+		/** Removed due to loop for intentionally disabled plugins/add-ons
+		if ( false === $enabled && true === $e20r_roles_addons[$stub]['disabled'] ) {
 			$utils->log("Forcing a remote check of the license" );
 			$force = true;
 		}
-		
+		*/
 		$licensed = Licensing\Licensing::is_licensed( $stub, $force );
 		
 		$utils->log("The {$stub} add-on is licensed? {$licensed}");
