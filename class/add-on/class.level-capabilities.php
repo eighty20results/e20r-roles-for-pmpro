@@ -368,28 +368,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 				return $is_active;
 			}
 			
-			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
-			
-			if ( $is_active === false ) {
-				
-				$utils->log( "Deactivating the add-on so disable the license" );
-				Licensing\Licensing::deactivate_license( $addon );
-			}
-			
-			if ( $is_active === false && true == $this->load_option( 'deactivation_reset' ) ) {
-				
-				// TODO: During add-on deactivation, remove all capabilities for levels & user(s)
-				// FixMe: Delete the option entry/entries from the Database
-				
-				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
-			}
-			
-			$e20r_roles_addons[ $addon ]['is_active'] = $is_active;
-			$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
-			$utils->log( "Setting the {$addon} add-on to {$e20r_roles_addons[ $addon ]['status']} / " . ( $is_active ? 'Yes' : 'No' ) );
-			update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
-			
-			return $is_active;
+			return parent::toggle_addon( $addon, $is_active );
 		}
 		
 		/**
@@ -422,7 +401,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			$utils = Utilities::get_instance();
 			global $e20r_roles_addons;
 			
-			// TODO: Set the filter name to match the sub for this plugin.
+			// TODO: Set the filter name to match the stub for this plugin.
 			
 			/**
 			 * Toggle ourselves on/off, and handle any deactivation if needed.
@@ -436,6 +415,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			add_filter( 'e20r_roles_general_level_capabilities', array( self::get_instance(), 'add_capabilities_to_role' ), 10, 3 );
 			add_filter( 'e20r-license-add-new-licenses', array( self::get_instance(), 'add_new_license_info' ), 10, 1 );
 			add_filter( 'e20r_roles_addon_options_level_capabilities', array( self::get_instance(), 'register_settings', ), 10, 1 );
+			
+			$utils->log("Verify that the {$stub} add-on is configured as 'active' and licensed");
 			
 			if ( true === parent::is_enabled( $stub ) ) {
 				
@@ -583,10 +564,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 		 */
 		public function validate_settings( $input ) {
 			
-			if ( WP_DEBUG ) {
-				error_log( "Input for save in Level_Capabilities:: " . print_r( $input, true ) );
-			}
-			
+			$utils = Utilities::get_instance();
+            $utils->log( "Input for save in Level_Capabilities:: " . print_r( $input, true ) );
+            
 			$defaults = $this->load_defaults();
 			
 			foreach ( $defaults as $key => $value ) {
@@ -606,10 +586,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 				}
 				
 			}
-			
-			if ( WP_DEBUG ) {
-				error_log( "Example_Addon saving " . print_r( $this->settings, true ) );
-			}
+            
+            $utils->log( "Level_Capabilities saving " . print_r( $this->settings, true ) );
 			
 			return $this->settings;
 		}
@@ -954,10 +932,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 	}
 }
 
-add_filter( "e20r_roles_addon_level_capabilities_name", array(
-	Level_Capabilities::get_instance(),
-	'get_class_name',
-) );
+add_filter( "e20r_roles_addon_level_capabilities_name", array( Level_Capabilities::get_instance(), 'get_class_name', ) );
 
 // Configure the add-on (global settings array)
 global $e20r_roles_addons;
