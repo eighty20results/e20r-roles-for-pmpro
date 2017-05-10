@@ -1466,29 +1466,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				return $is_active;
 			}
 			
-			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
-			
-			if ( false === $is_active ) {
-				
-				$utils->log( "Deactivating the add-on so disable the license" );
-				Licensing\Licensing::deactivate_license( $addon );
-			}
-			
-			if ( false === $is_active && true == $this->load_option( 'deactivation_reset' ) ) {
-				
-				// TODO: During add-on deactivation, remove all capabilities for levels & user(s)
-				// FixMe: Delete the option entry/entries from the Database
-				
-				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
-			}
-			
-			
-			$e20r_roles_addons[ $addon ]['is_active'] = $is_active;
-			$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
-			$utils->log( "Setting the {$addon} option to {$e20r_roles_addons[ $addon ]['status']}" );
-			update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
-			
-			return $is_active;
+			return parent::toggle_addon( $addon, $is_active );
 		}
 		
 		/**
@@ -1889,10 +1867,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public function validate_settings( $input ) {
 			
-			if ( WP_DEBUG ) {
-				error_log( "Input for save in bbPress_Roles:: " . print_r( $input, true ) );
-			}
-			
+		    $utils = Utilities::get_instance();
+      
+            $utils->log( "Input for save in bbPress_Roles:: " . print_r( $input, true ) );
 			$defaults = $this->load_defaults();
 			
 			foreach ( $defaults as $key => $value ) {
@@ -1927,10 +1904,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					$this->settings[ $key ] = $defaults[ $key ];
 				}
 			}
+            
+            $utils->log( "bbPress_Roles saving " . print_r( $this->settings, true ) );
 			
-			if ( WP_DEBUG ) {
-				error_log( "bbPress_Roles saving " . print_r( $this->settings, true ) );
-			}
 			
 			return $this->settings;
 		}
@@ -2839,7 +2815,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			global $current_user;
 			
-			if ( true === $e20r_roles_addons[ $stub ]['is_active'] ) {
+			if ( true === parent::is_enabled( $stub ) ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
 				
