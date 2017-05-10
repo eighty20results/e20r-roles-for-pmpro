@@ -1749,21 +1749,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			return $content;
 		}
-		
-		/**
-		 * Append this add-on to the list of configured & enabled add-ons
-		 */
-		public static function configure_addon() {
-			
-			$me    = self::get_instance();
-			$name  = strtolower( $me->get_class_name() );
-			$utils = Utilities::get_instance();
-			
-			$utils->log( "Executing configure_addon() for bbPress Roles" );
-			
-			parent::is_enabled( $name );
-		}
-		
+  
 		/**
 		 * Configure the settings page/component for this add-on
 		 *

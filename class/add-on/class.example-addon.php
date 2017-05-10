@@ -566,18 +566,6 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			}
 		}
 		
-		
-		/**
-		 * Append this add-on to the list of configured & enabled add-ons
-		 */
-		public static function configure_addon() {
-			
-			$class = self::get_instance();
-			$name  = strtolower( $class->get_class_name() );
-
-			parent::is_enabled( $name );
-		}
-		
 		/**
 		 * Configure the settings page/component for this add-on
 		 *
