@@ -2627,7 +2627,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					}
 				}
 			} else {
-				$utils->add_message( sprintf( __( 'No Membership Levels defined. Please <a href="%s">configure membership level(s)</a> before proceeding', E20R_Roles_For_PMPro::plugin_slug ), admin_url( 'admin.php?page=pmpro-membershiplevels' ) ), 'error', 'backend' );
+			    
+			    $all_levels = pmpro_getAllLevels( true, true );
+			    
+			    if ( empty( $all_levels ) ) {
+				    $utils->add_message( sprintf( __( 'No Membership Levels defined. Please <a href="%s">configure membership level(s)</a> before proceeding', E20R_Roles_For_PMPro::plugin_slug ), admin_url( 'admin.php?page=pmpro-membershiplevels' ) ), 'error', 'backend' );
+			    }
 			}
 			
 			return $bbp_role_defs;
