@@ -77,17 +77,21 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				
 				// Get new/existing settings
 				$license_settings = self::get_license_settings();
+				
+				// Init the config array if needed
 				if ( ! isset( $license_settings[ $product_stub ] ) ) {
 					$license_settings[ $product_stub ] = array();
 				}
 				
-				$license_settings = isset( $license_settings[ $product_stub ] ) ? $license_settings[ $product_stub ] : $license_settings[ $pro ];
+				$utils->log( "License settings for {$product_stub}: " . print_r( $license_settings[ $product_stub ], true ) );
 				
-				// Update the local cache for the license
-				Cache::set( self::CACHE_KEY, $license_settings, DAY_IN_SECONDS, self::CACHE_GROUP );
+				if ( ! empty( $license_settings[ $product_stub ] ) ) {
+					// Update the local cache for the license
+					Cache::set( self::CACHE_KEY, $license_settings, DAY_IN_SECONDS, self::CACHE_GROUP );
+				}
 			}
 			
-			$is_active = ( ! empty( $license_settings['key'] ) && ! empty( $license_settings['status'] ) && 'active' == $license_settings['status'] );
+			$is_active = ( isset( $license_settings[ $product_stub ]['key'] ) && ! empty( $license_settings[ $product_stub ]['key'] ) && ( isset( $license_settings[ $product_stub ]['status'] ) && 'active' == $license_settings[ $product_stub ]['status'] ) );
 			
 			$utils->log( "License status for {$product_stub}: " . ( $is_active ? 'Active' : 'Inactive' ) );
 			
@@ -250,10 +254,6 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 					$name = "Unidentified";
 				}
 				
-				$msg = sprintf( __( "Sorry, no valid license found for: %s", self::$text_domain ), $name );
-				$utils->log( $msg );
-				$utils->add_message( $msg, 'error' );
-				
 				return $license_status;
 			}
 			
@@ -389,20 +389,19 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			);
 			
 			$decoded = self::send_to_license_server( $api_params );
+   
+			if ( ( isset( $decoded->result) && 'success' === $decoded->result ) || -1 === $decoded ) {
 			
-			if ( false === $decoded ) {
-				return $decoded;
+				$utils->log( "Removing license info for {$product}..." );
+                self::update_license_settings( $product, null );
+				
+                // Clear the cache
+				Cache::delete( self::CACHE_KEY, self::CACHE_GROUP );
+				
+				return true;
 			}
-			
-			if ( 'success' !== $decoded->result ) {
-				return false;
-			}
-			
-			$utils->log( "Removing license {$product}..." );
-			self::update_license_settings( $product, null );
-			
-			return true;
-			
+            
+            return false;
 		}
 		
 		/**
@@ -502,9 +501,11 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			
 			if ( $decoded->result === 'success' ) {
 				return $decoded;
+			} elseif ( 80 == $decoded->error_code ) {
+				return -1;
 			} else {
-				return false;
-			}
+			    return false;
+            }
 		}
 		
 		/**
@@ -526,7 +527,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		 */
 		static public function register_settings() {
 			
-		 
+			
 			$utils = Utilities::get_instance();
 			
 			register_setting(
@@ -542,7 +543,8 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				'e20r-licensing'
 			);
 			
-			$licenses     = self::get_license_settings();
+			$licenses = self::get_license_settings();
+			$license_list = array();
 			
 			// $utils->log( "License list: " . print_r( $license_list, true ) );
 			
@@ -559,14 +561,14 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 					
 				} else {
 					
-					$utils->log( "Generate settings fields for {$k}");
+					$utils->log( "Generate settings fields for {$k}" );
 					
 					// Clean up
 					
 					if ( $k !== 'new_licenses' && $k !== 'example_addon' && isset( $license['key'] ) && $license['key'] != 'e20r_default_license' && ! empty( $license['key'] ) ) {
 						
 						$utils->log( "An activated license: {$k}: {$license['key']}" );
-						$status = isset( $license['status'] ) ? ucfirst( $license['status'] ) : __('Inactive', E20R_Roles_For_PMPro::plugin_slug );
+						$status = isset( $license['status'] ) ? ucfirst( $license['status'] ) : __( 'Inactive', E20R_Roles_For_PMPro::plugin_slug );
 						
 						add_settings_field(
 							"{$license['key']}",
@@ -604,7 +606,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 							
 							// Skip if we've got this one in the list of licenses already.
 							
-							if ( ! in_array( $new['new_product'], $license_list )  ) {
+							if ( ! in_array( $new['new_product'], $license_list ) ) {
 								
 								$utils->log( "Including new license field for {$new['new_product']}" );
 								
@@ -727,7 +729,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				do_settings_sections( 'e20r-licensing' );
 				submit_button();
 				?>
-            
+
             </form>
 			<?php
 			
@@ -772,13 +774,13 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		
 		public function load_scripts( $hook ) {
 			
-		    $utils = Utilities::get_instance();
-		    $utils->log("Attempting to load License JS");
-		    /*
+			$utils = Utilities::get_instance();
+			$utils->log( "Attempting to load License JS" );
+			/*
 			if ( 'toplevel_page_e20r-licensing' != $hook ) {
 				return;
 			}
-            */
+			*/
 			wp_enqueue_script( 'e20r-license-admin', plugins_url( 'javascript/e20r-license-admin.js', __FILE__ ), array( 'jquery' ) );
 		}
 		
@@ -905,13 +907,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		 */
 		public static function get_license_page_url( $stub ) {
 			
-			$license_page_url = add_query_arg(
-				array(
-					'page'         => 'e20r-licensing',
-					'license_stub' => $stub,
-				),
-				admin_url( 'options-general.php' )
-			);
+			$license_page_url = add_query_arg( 'page', 'e20r-licensing', admin_url( 'options-general.php' ) );
 			
 			return $license_page_url;
 		}
