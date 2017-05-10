@@ -123,7 +123,7 @@ class E20R_Roles_Addon {
 		global $e20r_roles_addons;
 		$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_roles_{$stub}_enabled", false );
 		
-		$utils->log("is_active setting for {$stub}: " . $e20r_roles_addons[$stub]['is_active']);
+		$utils->log("is_active setting for {$stub}: " . ( $e20r_roles_addons[$stub]['is_active'] ? 'True' : 'False' ) );
 		
 		if ( true == $e20r_roles_addons[$stub]['is_active'] ) {
 			$enabled = true;
@@ -132,7 +132,7 @@ class E20R_Roles_Addon {
 		$utils->log("The {$stub} add-on is enabled? {$enabled}");
 		$force = false;
 		
-		if ( true === $enabled && 'deactivated' === $e20r_roles_addons[$stub]['status'] ) {
+		if ( false === $enabled ) {
 			$utils->log("Forcing a remote check of the license" );
 			$force = true;
 		}
