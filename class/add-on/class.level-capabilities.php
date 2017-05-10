@@ -428,23 +428,14 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			 * Toggle ourselves on/off, and handle any deactivation if needed.
 			 */
 			add_action( 'e20r_roles_addon_toggle_addon', array( self::get_instance(), 'toggle_addon' ), 10, 2 );
-			add_action( 'e20r_roles_addon_deactivating_core', array(
-				self::get_instance(),
-				'deactivate_addon',
-			), 10, 1 );
+			add_action( 'e20r_roles_addon_deactivating_core', array( self::get_instance(), 'deactivate_addon' ), 10, 1 );
 			
 			/**
 			 * Configuration actions & filters
 			 */
-			add_filter( 'e20r_roles_general_level_capabilities', array(
-				self::get_instance(),
-				'add_capabilities_to_role',
-			), 10, 3 );
+			add_filter( 'e20r_roles_general_level_capabilities', array( self::get_instance(), 'add_capabilities_to_role' ), 10, 3 );
 			add_filter( 'e20r-license-add-new-licenses', array( self::get_instance(), 'add_new_license_info' ), 10, 1 );
-			add_filter( 'e20r_roles_addon_options_level_capabilities', array(
-				self::get_instance(),
-				'register_settings',
-			), 10, 1 );
+			add_filter( 'e20r_roles_addon_options_level_capabilities', array( self::get_instance(), 'register_settings', ), 10, 1 );
 			
 			if ( true === parent::is_enabled( $stub ) ) {
 				
@@ -456,19 +447,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 				 * Membership related settings for role(s) add-on
 				 */
 				add_action( 'e20r_roles_level_settings', array( self::get_instance(), 'load_level_settings' ), 10, 2 );
-				add_action( 'e20r_roles_level_settings_save', array(
-					self::get_instance(),
-					'save_level_settings',
-				), 10, 2 );
-				add_action( 'e20r_roles_level_settings_delete', array(
-					self::get_instance(),
-					'delete_level_settings',
-				), 10, 2 );
+				add_action( 'e20r_roles_level_settings_save', array( self::get_instance(), 'save_level_settings' ), 10, 2 );
+				add_action( 'e20r_roles_level_settings_delete', array( self::get_instance(), 'delete_level_settings' ), 10, 2 );
 				
-				add_action( 'e20r_roles_set_level_caps', array(
-					self::get_instance(),
-					'configure_level_capabilities',
-				), 10, 2 );
+				add_action( 'e20r_roles_set_level_caps', array( self::get_instance(), 'configure_level_capabilities' ), 10, 2 );
 			}
 		}
 		
