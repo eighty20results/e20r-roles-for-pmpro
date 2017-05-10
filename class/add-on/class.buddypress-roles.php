@@ -107,8 +107,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 		}
 		
 		public function get_class_name() {
+			$utils = Utilities::get_instance();
 			
 			if ( empty( $this->class_name ) ) {
+				$utils->log("Setting class name by extracting it...");
 				$this->class_name = $this->maybe_extract_class_name( get_class( self::$instance ) );
 			}
 			
@@ -343,7 +345,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			if ( isset( $level_settings[ $level_id ] ) ) {
 				
-				$preserve = array_diff_assoc( $this->select_capabilities( $level_settings[ $level_id ]['forum_permission'] ), $capabilities );
+				$preserve = array_diff_assoc(  $level_settings[ $level_id ]['capabilities'], $capabilities );
 				
 				$utils->log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
 				$utils->log( "... for the existing level specific capabilities: " . print_r( $capabilities, true ) );
@@ -454,28 +456,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				return $is_active;
 			}
 			
-			$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
-			
-			if ( $is_active === false ) {
-				
-				$utils->log( "Deactivating the add-on so disable the license" );
-				Licensing\Licensing::deactivate_license( $addon );
-			}
-			
-			if ( $is_active === false && true == $this->load_option( 'deactivation_reset' ) ) {
-				
-				// TODO: During add-on deactivation, remove all capabilities for levels & user(s)
-				// FixMe: Delete the option entry/entries from the Database
-				
-				$utils->log( "Deactivate the {$e20r_roles_addons[ $addon ]['label']} capabilities for all levels & all user(s)!" );
-			}
-			
-			$e20r_roles_addons[ $addon ]['is_active'] = $is_active;
-			$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
-			$utils->log( "Setting the {$addon} option to {$e20r_roles_addons[ $addon ]['status']}" );
-			update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
-			
-			return $is_active;
+            return parent::toggle_addon( $addon, $is_active );
 		}
 		
 		/**
@@ -598,9 +579,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 		 */
 		public function validate_settings( $input ) {
 			
-			if ( WP_DEBUG ) {
-				error_log( "Input for save in BuddyPress_Roles:: " . print_r( $input, true ) );
-			}
+			$utils = Utilities::get_instance();
+            $utils->log( "Input for save in BuddyPress_Roles:: " . print_r( $input, true ) );
 			
 			$defaults = $this->load_defaults();
 			
@@ -614,7 +594,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 							unset( $this->settings['level_settings'][ $level_id ]['capabilitiies'] );
 						}
 						
-						$this->settings['level_settings'][ $level_id ]['capabilities'] = $this->select_capabilities( $settings['forum_permission'] );
+						// $this->settings['level_settings'][ $level_id ]['capabilities'] = $this->select_capabilities( $settings['forum_permission'] );
 					}
 					
 				} else if ( isset( $input[ $key ] ) ) {
@@ -625,10 +605,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				}
 				
 			}
-			
-			if ( WP_DEBUG ) {
-				error_log( "BuddyPress_Roles saving " . print_r( $this->settings, true ) );
-			}
+            
+            $utils->log( "BuddyPress_Roles saving " . print_r( $this->settings, true ) );
 			
 			return $this->settings;
 		}
