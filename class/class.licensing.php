@@ -69,7 +69,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			
 			$utils->log( "Checking license for {$product_stub}" );
 			
-			if ( null === ( $license_settings = Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || true === $force ) {
+			if ( null === ( $license_settings = Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || empty( $license_settings[$product_stub] ) || true === $force )  {
 				
 				$utils->log( "Invalid cache for " . self::CACHE_KEY );
 				
