@@ -70,7 +70,6 @@ class E20R_Roles_Addon {
 		return self::$instance;
 	}
 	
-	
 	public static function load_addon( $stub = null ) {
 		
 		global $e20r_roles_addons;
@@ -87,6 +86,7 @@ class E20R_Roles_Addon {
 		
 		self::check_requirements( $stub );
 		
+		/*
 		$is_licensed = Licensing\Licensing::is_licensed( $stub );
 		
 		if ( false === $is_licensed ) {
@@ -95,20 +95,8 @@ class E20R_Roles_Addon {
 			if ( isset( $e20r_roles_addons[ $stub ]['is_active'] ) && true == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				$e20r_roles_addons[ $stub ]['is_active'] = false;
 			}
-			
-			$utils->add_message(
-				sprintf(
-					__(
-						'The %1$s add-on is <strong>currently disabled!</strong><br/>It requires an update and usage license key. Please <a href="%2$s">add your license key</a>.',
-						E20R_Roles_For_PMPro::plugin_slug
-					),
-					$e20r_roles_addons[ $stub ]['label'],
-					Licensing\Licensing::get_license_page_url( $stub )
-				),
-				'error'
-			);
 		}
-		
+		*/
 	}
 	
 	public static function is_enabled( $stub ) {
@@ -119,6 +107,7 @@ class E20R_Roles_Addon {
 		
 		$enabled = false;
 		$licensed = false;
+		$screen = null;
 		
 		global $e20r_roles_addons;
 		$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_roles_{$stub}_enabled", false );
@@ -129,7 +118,7 @@ class E20R_Roles_Addon {
 			$enabled = true;
 		}
 		
-		$utils->log("The {$stub} add-on is enabled? {$enabled}");
+		$utils->log("The {$stub} add-on is enabled? " . ( $enabled ? 'Yes' : 'No') );
 		$force = false;
 
 		/** Removed due to loop for intentionally disabled plugins/add-ons
@@ -140,7 +129,7 @@ class E20R_Roles_Addon {
 		*/
 		$licensed = Licensing\Licensing::is_licensed( $stub, $force );
 		
-		$utils->log("The {$stub} add-on is licensed? {$licensed}");
+		$utils->log("The {$stub} add-on is licensed? " . ( $licensed ? 'Yes' : 'No') );
 		
 		$e20r_roles_addons[ $stub ]['is_active'] = ( $enabled && $licensed );
 		
@@ -170,6 +159,68 @@ class E20R_Roles_Addon {
 		
 		$utils->log("Using {$name} to load class");
 		return $name;
+	}
+	
+	/**
+	 * Action Hook: Enable/disable this add-on. Will clean up if we're being deactivated & configured to do so
+	 *
+	 * @action e20r_roles_addon_toggle_addon
+	 *
+	 * @param string $addon
+	 * @param bool   $is_active
+	 *
+	 * @return bool
+	 */
+	public function toggle_addon( $addon, $is_active = false ) {
+		
+		global $e20r_roles_addons;
+		
+		$utils = Utilities::get_instance();
+		$licensed = true;
+		
+		$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
+		
+		if ( $is_active === false ) {
+			
+			$utils->log( "Deactivating the add-on so disable the license" );
+			Licensing\Licensing::deactivate_license( $addon );
+		}
+		
+		if ( $is_active === false && true == $this->load_option( 'deactivation_reset' ) ) {
+			
+			// TODO: During add-on deactivation, remove all capabilities for levels & user(s)
+			// FixMe: Delete the option entry/entries from the Database
+			
+			$utils->log( "Deactivate the {$e20r_roles_addons[ $addon ]['label']} capabilities for all levels & all user(s)!" );
+		}
+		
+		if ( true === $is_active && false === $e20r_roles_addons[$addon]['is_active'] ) {
+			
+			$licensed = Licensing\Licensing::is_licensed( $addon, true );
+			
+			if ( true !== $licensed && is_admin() ) {
+				$utils->add_message(
+					sprintf(
+						__(
+							'The %1$s add-on is <strong>currently disabled!</strong><br/>Using it requires a license key. Please <a href="%2$s">add your license key</a>.',
+							E20R_Roles_For_PMPro::plugin_slug
+						),
+						$e20r_roles_addons[ $addon ]['label'],
+						Licensing\Licensing::get_license_page_url( $addon )
+					),
+					'error',
+					'backend'
+				);
+			}
+		}
+		
+		$e20r_roles_addons[ $addon ]['is_active'] = $is_active && $licensed;
+		$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
+		
+		$utils->log( "Setting the {$addon} option to {$e20r_roles_addons[ $addon ]['status']}" );
+		update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
+		
+		return $is_active;
 	}
 	
 	public static function check_requirements( $stub ) {
