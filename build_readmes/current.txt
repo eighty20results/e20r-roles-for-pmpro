@@ -1,1 +1,2 @@
-BUG/FIX: Fatal error during processing of new membership level
+ENHANCEMENT: Grant access to all content for users with Administrator role
+BUG/FIX: Not all versions of PHP allows expression as default argument
