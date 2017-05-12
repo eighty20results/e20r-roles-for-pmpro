@@ -37,6 +37,8 @@ class PMPro_Content_Access {
 			self::get_instance(),
 			'has_membership_access',
 		), 99, 4 );
+		
+		add_filter( 'pmpro_has_membership_access_filter', array( self::get_instance(), 'grant_admin_access_to_content' ), 999, 4 );
 	}
 	
 	/**
@@ -117,6 +119,25 @@ class PMPro_Content_Access {
 		}
 		
 		return isset( $level_map[ $level_id ] ) ? in_array( $post_id, $level_map[ $level_id ] ) : false;
+	}
+	
+	/**
+	 * Grants access to the content if the user has the administrator role
+	 *
+	 * @param bool $has_access
+	 * @param \WP_Post $post
+	 * @param \WP_User $user
+	 * @param array $levels_for_post
+	 *
+	 * @return bool
+	 */
+	public function grant_admin_access_to_content( $has_access, $post, $user, $levels_for_post ) {
+		
+		if ( user_can( $user, 'manage_options' ) || $user->has_cap('administrator' ) ) {
+			$has_access = true;
+		}
+		
+		return $has_access;
 	}
 	
 	/**
