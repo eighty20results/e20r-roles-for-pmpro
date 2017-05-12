@@ -240,7 +240,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			}
 			
 			$level_permission = $this->get_user_level_perms( $user->ID );
-			$level            = pmpro_getMembershipLevelForUser( $user->ID );
+			
+			$level = null;
+			if ( ( !empty( $level_requirements ) && ! function_exists( 'pmpro_getMembershipLevelForUser') ) || ! function_exists( 'pmpro_getMembershipLevelForUser')) {
+				return false;
+			}
+			
+			$level = pmpro_getMembershipLevelForUser( $user->ID );
 			
 			$forum_permission = apply_filters( 'e20r_roles_addon_bbpress_default_add_forum_perm', 'publish_forums' );
 			$topic_permission = apply_filters( 'e20r_roles_addon_bbpress_default_add_topic_perm', 'publish_topics' );
@@ -1479,7 +1485,12 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			$utils = Utilities::get_instance();
 			
 			$user_id     = get_current_user_id();
-			$level       = pmpro_getMembershipLevelForUser();
+			if ( function_exists( 'pmpro_getMembershipLevelForUser' ) ) {
+				$level = pmpro_getMembershipLevelForUser();
+			} else {
+			    $level = null;
+            }
+            
 			$level_id    = null;
 			$level_perms = null;
 			
@@ -1518,6 +1529,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				return;
 			}
 			
+			if ( ! function_exists( 'pmpro_getMembershipLevelForUser' ) ) {
+			    return;
+            }
+            
 			if ( false === $this->should_be_accessible() ) {
 				$utils->log( "Nothing to do since the forum is inaccessible" );
 				
@@ -2572,11 +2587,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				'capabilities' => $this->select_capabilities( 'add_topics' ),
 			);
 			
-			if ( ! empty( $level_settings ) ) {
+			if ( ! empty( $level_settings ) && function_exists( 'pmpro_getLevel' ) ) {
 				
 				foreach ( $level_settings as $level_id => $settings ) {
 					
-					$level = pmpro_getLevel( $level_id );
+                    $level = pmpro_getLevel( $level_id );
 					
 					if ( ! empty( $level ) ) {
 						
@@ -2590,7 +2605,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				}
 			} else {
 			    
-			    $all_levels = pmpro_getAllLevels( true, true );
+			    $all_levels = null;
+			    
+			    if ( function_exists( 'pmpro_getAllLevels' ) ) {
+				    $all_levels = pmpro_getAllLevels( true, true );
+			    }
 			    
 			    if ( empty( $all_levels ) ) {
 				    $utils->add_message( sprintf( __( 'No Membership Levels defined. Please <a href="%s">configure membership level(s)</a> before proceeding', E20R_Roles_For_PMPro::plugin_slug ), admin_url( 'admin.php?page=pmpro-membershiplevels' ) ), 'error', 'backend' );
