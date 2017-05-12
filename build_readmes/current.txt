@@ -1,2 +1,1 @@
-ENHANCEMENT: Grant access to all content for users with Administrator role
-BUG/FIX: Not all versions of PHP allows expression as default argument
+BUG/FIX: White-screen if PMPro isn't active

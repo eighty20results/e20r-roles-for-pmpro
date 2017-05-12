@@ -52,6 +52,10 @@ Requires the BuddyPress plugin if you enable the BuddyPress Roles module (Not ye
  Please report your issue to us by using the (E20R Roles for PMPro)[link="https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/"] Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day.
 
 = Changelog =
+== 2.0.6 ==
+
+* BUG/FIX: White-screen if PMPro isn't active
+
 == 2.0.5 ==
 
 * ENHANCEMENT: Grant access to all content for users with Administrator role
