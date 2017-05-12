@@ -83,6 +83,10 @@ class PMPro_Content_Access {
 			
 			global $wpdb;
 			
+			if ( ! isset( $wpdb->pmpro_memberships_pages ) ) {
+				return $post_levels;
+			}
+			
 			$sql         = $wpdb->prepare( "SELECT membership_id FROM {$wpdb->pmpro_memberships_pages} WHERE page_id = %d", $post_id );
 			$post_levels = $wpdb->get_col( $sql );
 			
