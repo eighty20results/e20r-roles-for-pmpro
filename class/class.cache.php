@@ -68,7 +68,7 @@ if ( ! class_exists( 'E20R\\Utilities\\Cache' ) ) {
 		 *
 		 * @return bool
 		 */
-		public static function set( $key, $value, $expires = (60 * 60), $group = self::CACHE_GROUP ) {
+		public static function set( $key, $value, $expires = HOUR_IN_SECONDS, $group = self::CACHE_GROUP ) {
 			
 			$data = new Cache_Object( $key, $value );
 			
