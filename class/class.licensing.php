@@ -557,30 +557,29 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			
 			if ( empty( $check_menu ) ) {
 				$utils->log("No menu object found??");
-				return true;
+				return false;
 			}
 			
-			foreach ( $check_menu as $k => $item ) {
+			$item = $check_menu['options-general.php'];
+			
+			if ( true === $sub ) {
 				
-				if ( false !== $sub ) {
+				foreach ( $item as $subm ) {
 					
-					foreach ( $item as $subm ) {
-						
-						if ( false !== stripos( $subm[2], $handle ) ) {
-							$utils->log("Loading Submenu {$subm[2]}");
-							return false;
-						}
+					if ( $subm[2] == $handle ) {
+						$utils->log("Settings submenu already loaded: " . urldecode( $subm[2] ) );
+						return true;
 					}
-				} else {
-					
-					if ( false !== stripos( $item[2], $handle ) ) {
-						$utils->log("Loading Menu {$item[2]}");
-						return false;
-					}
+				}
+			} else {
+				
+				if ( $item[2] == $handle ) {
+					$utils->log("Menu already loaded: " . urldecode( $item[2] ) );
+					return true;
 				}
 			}
 			
-			return true;
+			return false;
 		}
 		
 		/**
