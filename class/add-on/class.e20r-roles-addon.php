@@ -105,6 +105,10 @@ class E20R_Roles_Addon {
 		
 		$utils->log("Checking if {$stub} is enabled");
 		
+		if ( $stub === 'example_addon' ) {
+			return false;
+		}
+		
 		$enabled = false;
 		$licensed = false;
 		$screen = null;
