@@ -513,14 +513,12 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		 */
 		public static function add_options_page() {
 			
-			$utils = Utilities::get_instance();
-			$utils->log("Loading the License settings page for the Roles plugin");
 			
 			// Check whether the Licensing page is already loaded or not
 			if ( false === self::is_license_page_loaded( 'e20r-licensing', true ) ) {
 				
-				add_action('admin_menu', array( self::get_instance(), 'load_license_settings_page'));
-				
+				$class = self::get_instance();
+				$class->load_license_settings_page();
 			}
 		}
 		
@@ -533,9 +531,8 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				'e20r-licensing',
 				array( self::get_instance() , 'licensing_page' )
 			);
-			
-			error_log( "loaded handle: {$handle}");
 		}
+		
 		/**
 		 * Check whether the Licensing page is already loaded or not
 		 *
@@ -560,28 +557,30 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			
 			if ( empty( $check_menu ) ) {
 				$utils->log("No menu object found??");
-				return false;
+				return true;
 			}
 			
 			foreach ( $check_menu as $k => $item ) {
-    
+				
 				if ( false !== $sub ) {
 					
 					foreach ( $item as $subm ) {
 						
 						if ( false !== stripos( $subm[2], $handle ) ) {
-							return true;
+							$utils->log("Loading Submenu {$subm[2]}");
+							return false;
 						}
 					}
 				} else {
 					
 					if ( false !== stripos( $item[2], $handle ) ) {
-						return true;
+						$utils->log("Loading Menu {$item[2]}");
+						return false;
 					}
 				}
 			}
 			
-			return false;
+			return true;
 		}
 		
 		/**
@@ -775,7 +774,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		 * The page content for the E20R Licensing section
 		 */
 		public static function licensing_page() {
-			
+   
 			if ( ! function_exists( "current_user_can" ) || ( ! current_user_can( "manage_options" ) && ! current_user_can( "e20r_license_admin" ) ) ) {
 				wp_die( __( "You are not permitted to perform this action.", self::$text_domain ) );
 			}
