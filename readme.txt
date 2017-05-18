@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: pmpro, paid memberships pro, membership plugin, membership, wordpress roles, bbpress, buddypress, capabilities, membership capabilities, pmpro add-on, pmpro addon
 Requires at least: 4.7
 Tested up to: 4.7.4
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 =========
 
 Appends a WordPress Role to each user's account during checkout where the role uses the Membership Level as it's displayed name.
@@ -52,6 +52,20 @@ Requires the BuddyPress plugin if you enable the BuddyPress Roles module (Not ye
  Please report your issue to us by using the (E20R Roles for PMPro)[link="https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/"] Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day.
 
 = Changelog =
+== 2.0.7 ==
+
+* BUG/FIX: Load a single instance of the License management page, regardless of number of E20R license class instances on the system
+* BUG/FIX: Didn't handle missing PMPro plugin properly
+* BUG/FIX: Updated URL for the account page for license status access
+* BUG/FIX: Loading duplicate E20R License Settings menu entries
+* BUG/FIX: Would not load E20R Licensing menu properly
+* BUG/FIX: Incorrect class protection for maybe_extract_class_name() method
+* ENHANCEMENT/FIX: Properly key the license info in the add-ons
+* ENHANCEMENT: Update licensing code to v1.0 (support for multiple licenses)
+* ENHANCEMENT: Skip enabling the example add-on
+* ENHANCEMENT: Add check for previously loaded license settings menu/page
+* ENHANCEMENT: Default access for administrator users for all protected content, regardless of the protected content's level requirement
+
 == 2.0.6 ==
 
 * BUG/FIX: White-screen if PMPro isn't active
