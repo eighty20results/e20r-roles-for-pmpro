@@ -130,7 +130,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			return $this->class_name;
 		}
 		
-		private function maybe_extract_class_name( $string ) {
+		protected function maybe_extract_class_name( $string ) {
 			
 		    $utils = Utilities::get_instance();
             $utils->log( "Supplied (potential) class name: {$string}" );
@@ -177,17 +177,18 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			
 			global $e20r_roles_addons;
 			
+			$utils = Utilities::get_instance();
+			
 			if ( ! isset( $settings['new_licenses'] ) ) {
 				$settings['new_licenses'] = array();
-			}
-			
-			if ( WP_DEBUG ) {
-				error_log( "Have " . count( $settings['new_licenses'] ) . " new to process already" );
+				$utils->log("Init array of licenses entry");
 			}
 			
 			$stub = strtolower( $this->get_class_name() );
+			$utils->log("Have " . count( $settings['new_licenses'] ) . " new licenses to process already. Adding {$stub}... ");
 			
-			$settings['new_licenses'][] = array(
+			$settings['new_licenses'][ $stub ] = array(
+				
 				'label_for'     => $stub,
 				'fulltext_name' => $e20r_roles_addons[ $stub ]['label'],
 				'new_product'   => $stub,
