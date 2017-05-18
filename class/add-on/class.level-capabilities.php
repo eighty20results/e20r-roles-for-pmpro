@@ -126,13 +126,13 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			
 			if ( ! isset( $settings['new_licenses'] ) ) {
 				$settings['new_licenses'] = array();
+				$utils->log("Init array of licenses entry");
 			}
 			
 			$stub = strtolower( $this->get_class_name() );
+			$utils->log("Have " . count( $settings['new_licenses'] ) . " new licenses to process already. Adding {$stub}... ");
 			
-			$utils->log( "Have " . count( $settings['new_licenses'] ) . " processed already ({$stub})" );
-			
-			$settings['new_licenses'][] = array(
+			$settings['new_licenses'][ $stub ] = array(
 				'label_for'     => $stub,
 				'fulltext_name' => $e20r_roles_addons[ $stub ]['label'],
 				'new_product'   => $stub,
