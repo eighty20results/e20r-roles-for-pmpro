@@ -1,11 +1,1 @@
-BUG/FIX: Load a single instance of the License management page, regardless of number of E20R license class instances on the system
-BUG/FIX: Didn't handle missing PMPro plugin properly
-BUG/FIX: Updated URL for the account page for license status access
-BUG/FIX: Loading duplicate E20R License Settings menu entries
-BUG/FIX: Would not load E20R Licensing menu properly
-BUG/FIX: Incorrect class protection for maybe_extract_class_name() method
-ENHANCEMENT/FIX: Properly key the license info in the add-ons
-ENHANCEMENT: Update licensing code to v1.0 (support for multiple licenses)
-ENHANCEMENT: Skip enabling the example add-on
-ENHANCEMENT: Add check for previously loaded license settings menu/page
-ENHANCEMENT: Default access for administrator users for all protected content, regardless of the protected content's level requirement
+ENHANCEMENT/FIX: Use default logging method
