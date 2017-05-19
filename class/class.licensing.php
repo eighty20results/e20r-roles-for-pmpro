@@ -77,7 +77,9 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				Cache::delete( self::CACHE_KEY, self::CACHE_GROUP );
 			}
 			
-			if ( null === ( $license_settings = Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || true === $force ) {
+			$excluded = apply_filters( '', array( 'e20r_default_license', 'example_addon', 'new_licenses' ) );
+   
+			if ( ! in_array( $product_stub, $excluded ) && ( null === ( $license_settings = Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || true === $force ) ) {
 				
 				$utils->log( "Invalid cache for " . self::CACHE_KEY );
 				
