@@ -179,7 +179,7 @@ if ( ! class_exists( 'E20R\\Utilities\\Utilities' ) ) {
 			
 			if ( ! defined( "WP_DEBUG" ) ) {
 				esc_attr_e( "[{$tid}] {$from}: {$msg}" );
-			} else {
+			} else if ( defined( 'WP_DEBUG' ) && true === WP_DEBUG ) {
 				error_log( "[{$tid}] {$from} - {$msg}" );
 			}
 			
