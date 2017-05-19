@@ -98,9 +98,7 @@ if ( ! class_exists( 'E20R\\Utilities\\Utilities' ) ) {
 			
 			if ( is_array( $this->msg ) && ! in_array( $message, $this->msg ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Adding a message to the admin errors: {$message}" );
-				}
+				$this->log( "Adding a message to the admin errors: {$message}" );
 				
 				// Save the new message
 				$this->msg[]        = $message;
@@ -134,9 +132,7 @@ if ( ! class_exists( 'E20R\\Utilities\\Utilities' ) ) {
 			
 			if ( ! empty( $this->msg ) && ! empty( $this->msgt ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Have " . count( $this->msg ) . " admin message(s) to display" );
-				}
+				$this->log( "Have " . count( $this->msg ) . " admin message(s) to display" );
 				
 				foreach ( $this->msg as $key => $notice ) { ?>
                     <div class="notice notice-<?php esc_html_e( $this->msgt[ $key ] ); ?> is-dismissible <?php esc_html_e( $this->msg_source[ $key ] ); ?>">
