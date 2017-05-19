@@ -56,9 +56,9 @@ class PMPro_Content_Access {
 	 */
 	public function has_membership_access( $has_access, $post, $user, $levels_for_post ) {
 		
-		if ( WP_DEBUG ) {
-			error_log( "Processing the addon has_access filter(s)" );
-		}
+		$utils = Utilities::get_instance();
+		
+		$utils->log( "Processing the addon has_access filter(s)" );
 		
 		return apply_filters( 'e20r_roles_addon_has_access', $has_access, $post, $user, $levels_for_post );
 	}

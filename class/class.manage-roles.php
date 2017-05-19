@@ -312,9 +312,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Manage_Roles' ) ) {
 			
 			$user_ids = PMPro_Members::get_members( $level_id, 'active', true );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Found " . count( $user_ids ) . " users to process" );
-			}
+			$utils->log( "Found " . count( $user_ids ) . " users to process" );
 			
 			foreach ( $user_ids as $user_id ) {
 				
@@ -327,10 +325,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Manage_Roles' ) ) {
 				if ( isset( $user->ID ) && true === $added_roles && false === user_can( $user, $role_name ) ) {
 					
 					$user->add_role( $role_name );
-					
-					if ( WP_DEBUG ) {
-						error_log( "Added {$role_name} to {$user_id}" );
-					}
+					$utils->log( "Added {$role_name} to {$user_id}" );
 					
 					$user = null;
 				}
