@@ -74,15 +74,12 @@ class E20R_Roles_Addon {
 		
 		global $e20r_roles_addons;
 		
-		if (WP_DEBUG) {
-			error_log("Stub is: {$stub}");
-		}
+		$utils = Utilities::get_instance();
+		$utils->log("Stub is: {$stub}");
 		
 		if ( empty( $stub ) || 'roles_addon' === $stub ) {
 			return;
 		}
-		
-		$utils = Utilities::get_instance();
 		
 		self::check_requirements( $stub );
 		
@@ -235,9 +232,9 @@ class E20R_Roles_Addon {
 			return;
 		}
 		
-		if (WP_DEBUG) {
-			error_log("Checking requirements for {$stub}");
-		}
+		$utils = Utilities::get_instance();
+		
+		$utils->log("Checking requirements for {$stub}");
 		
 		$utils = Utilities::get_instance();
 		
@@ -259,10 +256,7 @@ class E20R_Roles_Addon {
 			
 			if ( false === $is_active ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( sprintf( "%s is not active!", $e20r_roles_addons[ $stub ]['label'] ) );
-				}
-				
+				$utils->log( sprintf( "%s is not active!", $e20r_roles_addons[ $stub ]['label'] ) );
 				$utils->add_message(
 					sprintf(
 						__(

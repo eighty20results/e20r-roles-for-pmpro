@@ -127,10 +127,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			$class      = self::get_instance();
 			$utils      = Utilities::get_instance();
 			$class_name = $class->get_class_name();
-			
-			if ( WP_DEBUG ) {
-				error_log( "Loading the {$class_name} class action(s) " );
-			}
+            
+            $utils->log( "Loading the {$class_name} class action(s) " );
 			
 			global $e20r_roles_addons;
 			
@@ -282,33 +280,25 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			global $e20r_roles_addons;
 			
 			$stub = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
+   
 			// Are we supposed to be active?
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
-				
-				if ( WP_DEBUG ) {
-					error_log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
-				}
-				
+       
+			    $utils->log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
 				return $has_access;
 			}
-			
-			
-			
+   
 			// Anybody can read the content
 			if ( true == $this->load_option( 'global_anon_read' ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Anybody can view the forum post(s)" );
-				}
+				$utils->log( "Anybody can view the forum post(s)" );
 				
 				$has_access = true;
 			}
 			
 			// Do we need to override the access value?
-			
-			if ( WP_DEBUG ) {
-				error_log( "User {$user->ID} is currently not allowed to access the page/post/forum/thread/reply ({$post->ID})" );
-			}
+			$utils->log( "User {$user->ID} is currently not allowed to access the page/post/forum/thread/reply ({$post->ID})" );
 			
 			return $has_access;
 		}
@@ -333,11 +323,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			$stub  = strtolower( $this->get_class_name() );
 			$utils = Utilities::get_instance();
-			
-			if ( WP_DEBUG ) {
-				$utils->log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
-			}
-			
+            
+            $utils->log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
+            
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				return $capabilities;
 			}
@@ -374,7 +362,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			if ( true == $clear ) {
 				// TODO: During core plugin deactivation, remove all capabilities for levels & user(s)
 				// FixMe: Delete all option entries from the Database for this add-on
-				error_log( "Deactivate the capabilities for all levels & all user(s)!" );
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
 			}
 		}
 		
@@ -561,9 +551,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			$cleanup = $this->load_option( 'deactivation_reset' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
 			?>
             <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-deactivation_reset"
                    name="<?php esc_attr_e( $this->option_name ); ?>[deactivation_reset]"
@@ -630,9 +620,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			$allow_anon_read = $this->load_option( 'global_anon_read' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
 			
 			?>
             <select name="<?php esc_attr_e( $this->option_name ); ?>[global_anon_read]"
@@ -658,18 +648,18 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 		public function delete_level_settings( $level_id, $active_addons ) {
 			
 			if ( ! in_array( 'buddypress_roles', $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles add-on is not active. Nothing to do!" );
-				}
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "BuddyPress Roles add-on is not active. Nothing to do!" );
 				
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles:  No level ID specified!" );
-				}
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "BuddyPress Roles:  No level ID specified!" );
 				
 				return false;
 			}
@@ -694,19 +684,18 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 		public function save_level_settings( $level_id, $active_addons ) {
 			
 			$stub = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
+			
 			if ( ! in_array( $stub, $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles add-on is not active. Nothing to do!" );
-				}
+				
+				$utils->log( "BuddyPress Roles add-on is not active. Nothing to do!" );
 				
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles:  No level ID specified!" );
-				}
+				$utils->log( "BuddyPress Roles:  No level ID specified!" );
 				
 				return false;
 			}
@@ -723,9 +712,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			$level_settings[ $level_id ]['forum_permission'] = $utils->get_variable( 'e20r_buddypress_settings-forum_permission', array() );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
-			}
+			$utils->log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
 			
 			if ( isset( $level_settings[ - 1 ] ) ) {
 				unset( $level_settings[ - 1 ] );
@@ -736,9 +723,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			$this->settings['level_settings'] = $level_settings;
 			$this->save_settings();
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current settings: " . print_r( $this->settings, true ) );
-			}
+			$utils->log( "Current settings: " . print_r( $this->settings, true ) );
 		}
 		
 		/**

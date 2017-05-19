@@ -155,9 +155,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		public static function load_addon( $stub = null ) {
 			
-			if ( WP_DEBUG ) {
-				error_log( "Loading the bbPress_Roles class action(s) " );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Loading the bbPress_Roles class action(s) " );
 			
 			global $e20r_roles_addons;
 			
@@ -1432,7 +1432,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			if ( true == $clear ) {
 				// TODO: During core plugin deactivation, remove all capabilities for levels & user(s)
 				// FixMe: Delete all option entries from the Database for this add-on
-				error_log( "Deactivate the capabilities for all levels & all user(s)!" );
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
 			}
 		}
 		
@@ -1634,9 +1636,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					$retval = " {$level->name} ({$this->labels[ $perms ]['summary']})";
 				}
 				
-				if ( WP_DEBUG ) {
-					error_log( "User permissions: {$retval}" );
-				}
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "User permissions: {$retval}" );
 			}
 			
 			return $retval;
@@ -1830,9 +1832,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$hide_forums = $this->load_option( 'hide_forums' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Do we need hide member forums? " . ( $hide_forums == true ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Do we need hide member forums? " . ( $hide_forums == true ? 'Yes' : 'No' ) );
 			?>
             <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-hide_forums"
                    name="<?php esc_attr_e( $this->option_name ); ?>[hide_forums]"
@@ -1847,9 +1849,10 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$on_account_page = $this->load_option( 'on_account_page' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Do we need to add links for forums on user Account page? " . ( $on_account_page == true ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Do we need to add links for forums on user Account page? " . ( $on_account_page == true ? 'Yes' : 'No' ) );
+			
 			?>
             <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-on_account_page"
                    name="<?php esc_attr_e( $this->option_name ); ?>[on_account_page]"
@@ -1864,9 +1867,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$cleanup = $this->load_option( 'deactivation_reset' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
 			?>
             <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-deactivation_reset"
                    name="<?php esc_attr_e( $this->option_name ); ?>[deactivation_reset]"
@@ -1945,9 +1948,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$allow_anon_read = $this->load_option( 'global_anon_read' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
 			
 			?>
             <select name="<?php esc_attr_e( $this->option_name ); ?>[global_anon_read]"
@@ -1973,18 +1976,18 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		public function delete_level_settings( $level_id, $active_addons ) {
 			
 			if ( ! in_array( 'bbpress_roles', $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles add-on is not active. Nothing to do!" );
-				}
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "bbPress Roles add-on is not active. Nothing to do!" );
 				
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles:  No level ID specified!" );
-				}
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "bbPress Roles:  No level ID specified!" );
 				
 				return false;
 			}
@@ -2431,8 +2434,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			// Configure all related capabilities
 			$this->configure_forum_reply_capabilities();
+			$utils = Utilities::get_instance();
 			
-			error_log( "Loading support capabilities" );
+			$utils->log( "Loading support capabilities" );
 			
 			$default_capabilities = array(
 				'edit_others_topics'    => true,
@@ -2468,7 +2472,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			// Configure all related capabilities
 			$this->configure_forum_support_capabilities();
 			
-			error_log( "Loading admin capabilities" );
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Loading admin capabilities" );
 			
 			$default_capabilities = array(
 				'publish_forums'     => true,

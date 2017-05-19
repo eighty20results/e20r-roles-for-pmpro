@@ -233,9 +233,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			// Are we supposed to be active?
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
-				}
+				$utils = Utilities::get_instance();
+				$utils->log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
 				
 				return $has_access;
 			}
@@ -303,7 +302,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			if ( true == $clear ) {
 				// TODO: During core plugin deactivation, remove all capabilities for levels & user(s)
 				// FixMe: Delete all option entries from the Database for this add-on
-				error_log( "Deactivate the capabilities for all levels & all user(s)!" );
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
 			}
 		}
 		
@@ -545,9 +546,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			
 			$cleanup = $this->load_option( 'deactivation_reset' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
 			?>
             <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-deactivation_reset"
                    name="<?php esc_attr_e( $this->option_name ); ?>[deactivation_reset]"
@@ -610,9 +611,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 			
 			$allow_anon_read = $this->load_option( 'global_anon_read' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			$utils->log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
 			
 			?>
             <select name="<?php esc_attr_e( $this->option_name ); ?>[global_anon_read]"
@@ -638,21 +638,17 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 		public function delete_level_settings( $level_id, $active_addons ) {
 			
 			$name = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
 			
 			if ( ! in_array( $name, $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "Configure Capabilities add-on is not active. Nothing to do!" );
-				}
 				
+				$utils->log( "Configure Capabilities add-on is not active. Nothing to do!" );
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Configure Capabilities:  No level ID specified!" );
-				}
-				
+                $utils->log( "Configure Capabilities:  No level ID specified!" );
 				return false;
 			}
 			

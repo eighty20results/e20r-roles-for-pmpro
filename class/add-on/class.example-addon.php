@@ -293,22 +293,19 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			global $e20r_roles_addons;
 			
 			$stub = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
+   
 			// Are we supposed to be active?
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
-				
-				if ( WP_DEBUG ) {
-					error_log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
-				}
-				
+    
+				$utils->log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
 				return $has_access;
 			}
 			
 			// Not for bbPress content
 			if ( false === $this->is_forum_post( $post ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "We're not processing a forum post, skipping {$post->ID}" );
-				}
+				$utils->log( "We're not processing a forum post, skipping {$post->ID}" );
 				
 				return $has_access;
 			}
@@ -316,18 +313,13 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			// Anybody can read the content
 			if ( true == $this->load_option( 'global_anon_read' ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Anybody can view the forum post(s)" );
-				}
+				$utils->log( "Anybody can view the forum post(s)" );
 				
 				$has_access = true;
 			}
 			
 			// Do we need to override the access value?
-			
-			if ( WP_DEBUG ) {
-				error_log( "User {$user->ID} is currently not allowed to access the page/post/forum/thread/reply ({$post->ID})" );
-			}
+            $utils->log( "User {$user->ID} is currently not allowed to access the page/post/forum/thread/reply ({$post->ID})" );
 			
 			return $has_access;
 		}
@@ -351,10 +343,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			global $e20r_roles_addons;
 			
 			$stub = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
+   
+			$utils->log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
-			}
 			
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				return $capabilities;
@@ -363,26 +355,19 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			$level_settings = $this->load_option( 'level_settings' );
 			$preserve       = array_diff( $this->select_capabilities( $level_settings[ $level_id ]['forum_permission'] ), $capabilities );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
-			}
+			$utils->log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
 			
 			if ( isset( $level_settings[ $level_id ] ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "Adding/Removing the {$level_settings[$level_id]['forum_permission']} capabilities: " . print_r( $level_settings[ $level_id ]['capabilities'], true ) );
-					error_log( "... for the existing level specific capabilities: " . print_r( $capabilities, true ) );
-				}
+				$utils->log( "Adding/Removing the {$level_settings[$level_id]['forum_permission']} capabilities: " . print_r( $level_settings[ $level_id ]['capabilities'], true ) );
+                $utils->log( "... for the existing level specific capabilities: " . print_r( $capabilities, true ) );
 				
 				$capabilities = array_merge( $preserve, $level_settings[ $level_id ]['capabilities'] );
 			}
 			
 			// Clear up the array
 			$capabilities = array_unique( $capabilities );
-			
-			if ( WP_DEBUG ) {
-				error_log( "Loaded the bbPress Forum roles required for {$level_id}: " . print_r( $capabilities, true ) );
-			}
+            $utils->log( "Loaded the bbPress Forum roles required for {$level_id}: " . print_r( $capabilities, true ) );
 			
 			return $capabilities;
 		}
@@ -402,7 +387,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			if ( true == $clear ) {
 				// TODO: During core plugin deactivation, remove all capabilities for levels & user(s)
 				// FixMe: Delete all option entries from the Database for this add-on
-				error_log( "Deactivate the capabilities for all levels & all user(s)!" );
+				$utils = Utilities::get_instance();
+				
+				$utils->log( "Deactivate the capabilities for all levels & all user(s)!" );
 			}
 		}
 		
@@ -612,9 +599,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			
 			$cleanup = $this->load_option( 'deactivation_reset' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			$utils->log( "Do we need to remove roles if we deactivate the plugin? " . ( $cleanup == true ? 'Yes' : 'No' ) );
 			?>
             <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-deactivation_reset"
                    name="<?php esc_attr_e( $this->option_name ); ?>[deactivation_reset]"
@@ -631,9 +617,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 		 */
 		public function validate_settings( $input ) {
 			
-			if ( WP_DEBUG ) {
-				error_log( "Input for save in Example_Addon:: " . print_r( $input, true ) );
-			}
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Input for save in Example_Addon:: " . print_r( $input, true ) );
 			
 			$defaults = $this->load_defaults();
 			
@@ -655,9 +641,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 				
 			}
 			
-			if ( WP_DEBUG ) {
-				error_log( "Example_Addon saving " . print_r( $this->settings, true ) );
-			}
+			$utils->log( "Example_Addon saving " . print_r( $this->settings, true ) );
 			
 			return $this->settings;
 		}
@@ -680,9 +664,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			
 			$allow_anon_read = $this->load_option( 'global_anon_read' );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
-			}
+			$utils = Utilities::get_instance();
+			$utils->log( "Can non-members read the forum? " . ( $allow_anon_read == 1 ? 'Yes' : 'No' ) );
 			
 			?>
             <select name="<?php esc_attr_e( $this->option_name ); ?>[global_anon_read]"
@@ -706,21 +689,16 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 		 * @return bool
 		 */
 		public function delete_level_settings( $level_id, $active_addons ) {
+			$utils = Utilities::get_instance();
 			
-			if ( ! in_array( 'buddypress_roles', $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles add-on is not active. Nothing to do!" );
-				}
+			if ( ! in_array( 'example_addon', $active_addons ) ) {
+				$utils->log( "Example Add-on is not active. Nothing to do!" );
 				
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
-				
-				if ( WP_DEBUG ) {
-					error_log( "bbPress Roles:  No level ID specified!" );
-				}
-				
+                $utils->log( "Example Add-on:  No level ID specified!" );
 				return false;
 			}
 			
@@ -744,24 +722,20 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 		public function save_level_settings( $level_id, $active_addons ) {
 			
 			$stub = strtolower( $this->get_class_name() );
+			$utils = Utilities::get_instance();
+			
 			if ( ! in_array( $stub, $active_addons ) ) {
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles add-on is not active. Nothing to do!" );
-				}
-				
+				$utils->log( "Example Add-on is not active. Nothing to do!" );
 				return false;
 			}
 			
 			if ( empty( $level_id ) ) {
 				
-				if ( WP_DEBUG ) {
-					error_log( "BuddyPress Roles:  No level ID specified!" );
-				}
+				$utils->log( "Example add-on:  No level ID specified!" );
 				
 				return false;
 			}
-			
-			$utils          = Utilities::get_instance();
+   
 			$level_settings = $this->load_option( 'level_settings' );
 			
 			if ( ! isset( $level_settings[ $level_id ] ) ) {
@@ -773,9 +747,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			
 			$level_settings[ $level_id ]['forum_permission'] = $utils->get_variable( 'e20r_buddypress_settings-forum_permission', array() );
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
-			}
+			$utils->log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
 			
 			if ( isset( $level_settings[ - 1 ] ) ) {
 				unset( $level_settings[ - 1 ] );
@@ -786,9 +758,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			$this->settings['level_settings'] = $level_settings;
 			$this->save_settings();
 			
-			if ( WP_DEBUG ) {
-				error_log( "Current settings: " . print_r( $this->settings, true ) );
-			}
+			$utils->log( "Current settings: " . print_r( $this->settings, true ) );
 		}
 		
 		/**
@@ -945,7 +915,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 		 */
 		private function configure_forum_read_capabilities() {
 			
-			error_log( "Loading read capabilities" );
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Loading read capabilities" );
 			
 			$default_capabilities = array(
 				'spectate',
@@ -967,7 +939,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			
 			$this->configure_forum_read_capabilities();
 			
-			error_log( "Loading various reply capabilities" );
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Loading various reply capabilities" );
 			
 			$default_reply_capabilities  = array( 'publish_replies', 'edit_replies', 'participate', );
 			$default_thread_capabilities = array( 'publish_topics', 'edit_topics', 'assign_topic_tags', );
@@ -1001,7 +975,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			// Configure all related capabilities
 			$this->configure_forum_reply_capabilities();
 			
-			error_log( "Loading support capabilities" );
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Loading support capabilities" );
 			
 			$default_capabilities = array(
 				'edit_others_topics',
@@ -1037,7 +1013,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 			// Configure all related capabilities
 			$this->configure_forum_support_capabilities();
 			
-			error_log( "Loading admin capabilities" );
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Loading admin capabilities" );
 			
 			$default_capabilities = array(
 				'publish_forums',
