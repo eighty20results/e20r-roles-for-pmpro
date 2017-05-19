@@ -2362,7 +2362,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 */
 		private function configure_forum_read_capabilities() {
 			
-			error_log( "Loading read capabilities" );
+		    $utils = Utilities::get_instance();
+			$utils->log( "Loading read capabilities" );
 			
 			$default_capabilities = array(
 				'spectate'             => true,
@@ -2384,7 +2385,8 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 			
 			$this->configure_forum_read_capabilities();
 			
-			error_log( "Loading various reply capabilities" );
+			$utils = Utilities::get_instance();
+			$utils->log( "Loading various reply capabilities" );
 			
 			$default_reply_capabilities  = array(
 				'publish_replies' => true,
