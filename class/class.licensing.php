@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 1.0
+ * @version 1.1
  *
  */
 
@@ -77,7 +77,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				Cache::delete( self::CACHE_KEY, self::CACHE_GROUP );
 			}
 			
-			$excluded = apply_filters( '', array( 'e20r_default_license', 'example_addon', 'new_licenses' ) );
+			$excluded = apply_filters( 'e20r_licensing_excluded', array( 'e20r_default_license', 'example_addon', 'new_licenses' ) );
    
 			if ( ! in_array( $product_stub, $excluded ) && ( null === ( $license_settings = Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || true === $force ) ) {
 				
@@ -201,13 +201,13 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				return false;
 			}
 			
-			$utils->log( "Expiration date: {$settings['expires']}" );
+			$utils->log( "Expiration date for {$product}: {$settings['expires']}" );
 			
 			$expiration_interval     = apply_filters( 'e20r_licensing_expiration_warning_intervals', 30 );
 			$calculated_warning_time = strtotime( "+ {$expiration_interval} day", current_time( 'timestamp' ) );
 			$diff                    = $settings['expires'] - $calculated_warning_time;
 			
-			$utils->log( "Scheduled to expire on {$settings['expires']} vs {$calculated_warning_time}" );
+			$utils->log( "{$product} scheduled to expire on {$settings['expires']} vs {$calculated_warning_time}" );
 			
 			if ( $settings['expires'] <= $calculated_warning_time && $diff > 0 ) {
 				return true;
@@ -721,6 +721,11 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			<?php
 		}
 		
+		/**
+         * Show input row for License page
+         *
+		 * @param $args
+		 */
 		public static function show_input( $args ) {
 			
 			global $current_user;
