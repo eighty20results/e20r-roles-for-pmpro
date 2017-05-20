@@ -936,7 +936,8 @@ $stub = strtolower( apply_filters( "e20r_roles_addon_level_capabilities_name", n
 
 $e20r_roles_addons[ $stub ] = array(
 	'class_name'            => 'Level_Capabilities',
-	'is_active'             => ( get_option( "e20r_roles_{$stub}_enabled", false ) == 1 ? true : false ),
+	'is_active'             => ( get_option( "e20r_roles_{$stub}_enabled", false ) == true ? true : false ),
+	'active_license'        => ( get_option( "e20r_roles_{$stub}_licensed", false ) == true ? true : false ),
 	'status'                => 'deactivated',
 	'disabled'              => false,
 	'label'                 => 'Level Capabilities',

@@ -2972,6 +2972,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 	$e20r_roles_addons[$stub] = array(
 		'class_name'            => 'bbPress_Roles',
 		'is_active'             => ( get_option( "e20r_roles_{$stub}_enabled", false ) == 1 ? true : false ),
+		'active_license'        => ( get_option( "e20r_roles_{$stub}_licensed", false ) == true ? true : false ),
 		'status'                => 'deactivated',
 		'disabled'              => false,
 		'label'                 => 'bbPress Roles',

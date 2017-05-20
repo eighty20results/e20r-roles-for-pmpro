@@ -812,6 +812,7 @@ $stub = strtolower( apply_filters( "e20r_roles_addon_buddypress_roles_name", nul
 $e20r_roles_addons[ $stub ] = array(
 	'class_name'            => 'BuddyPress_Roles',
 	'is_active'             => ( get_option( "e20r_roles_{$stub}_enabled", false ) == true ? true : false ),
+	'active_license'        => ( get_option( "e20r_roles_{$stub}_licensed", false ) == true ? true : false ),
 	'status'                => 'deactivated',
 	'disabled'              => true, // TODO: Update & set to true when BuddyPress functionality is added.
 	'label'                 => 'BuddyPress Roles',
