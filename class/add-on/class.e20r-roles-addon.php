@@ -107,11 +107,12 @@ class E20R_Roles_Addon {
 		}
 		
 		$enabled = false;
-		$licensed = false;
 		$screen = null;
 		
 		global $e20r_roles_addons;
-		$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_roles_{$stub}_enabled", false );
+		
+		$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_roles_{$stub}_enabled", false ) ? true : false;
+		$e20r_roles_addons[$stub]['active_license'] = get_option( "e20r_roles_{$stub}_licensed", false ) ? true : false;
 		
 		$utils->log("is_active setting for {$stub}: " . ( $e20r_roles_addons[$stub]['is_active'] ? 'True' : 'False' ) );
 		
@@ -120,7 +121,6 @@ class E20R_Roles_Addon {
 		}
 		
 		$utils->log("The {$stub} add-on is enabled? " . ( $enabled ? 'Yes' : 'No') );
-		$force = false;
 
 		/** Removed due to loop for intentionally disabled plugins/add-ons
 		if ( false === $enabled && true === $e20r_roles_addons[$stub]['disabled'] ) {
@@ -128,11 +128,15 @@ class E20R_Roles_Addon {
 			$force = true;
 		}
 		*/
-		$licensed = Licensing\Licensing::is_licensed( $stub, $force );
 		
-		$utils->log("The {$stub} add-on is licensed? " . ( $licensed ? 'Yes' : 'No') );
+		if ( false === $e20r_roles_addons[ $stub ]['active_license'] || ( true === $e20r_roles_addons[ $stub ]['active_license'] && true === Licensing\Licensing::is_license_expiring( $stub ) ) ) {
+			$e20r_roles_addons[ $stub ]['active_license'] = Licensing\Licensing::is_licensed( $stub, true );
+			update_option( "e20r_roles_{$stub}_licensed", $e20r_roles_addons[ $stub ]['active_license'], false );
+		}
 		
-		$e20r_roles_addons[ $stub ]['is_active'] = ( $enabled && $licensed );
+		$utils->log("The {$stub} add-on is licensed? " . ( $e20r_roles_addons[$stub]['active_license'] ? 'Yes' : 'No') );
+		
+		$e20r_roles_addons[ $stub ]['is_active'] = ( $enabled && $e20r_roles_addons[$stub]['active_license'] );
 		
 		if ( $e20r_roles_addons[$stub]['is_active'] ) {
 			$e20r_roles_addons[$stub]['status'] = 'active';
@@ -197,9 +201,9 @@ class E20R_Roles_Addon {
 		
 		if ( true === $is_active && false === $e20r_roles_addons[$addon]['is_active'] ) {
 			
-			$licensed = Licensing\Licensing::is_licensed( $addon, true );
+			$e20r_roles_addons[ $addon ]['active_license'] = Licensing\Licensing::is_licensed( $addon, true );
 			
-			if ( true !== $licensed && is_admin() ) {
+			if ( true !== $e20r_roles_addons[ $addon ]['active_license'] && is_admin() ) {
 				$utils->add_message(
 					sprintf(
 						__(
@@ -215,11 +219,13 @@ class E20R_Roles_Addon {
 			}
 		}
 		
-		$e20r_roles_addons[ $addon ]['is_active'] = $is_active && $licensed;
+		$e20r_roles_addons[ $addon ]['is_active'] = $is_active && $e20r_roles_addons[ $addon ]['active_license'];
+		
 		$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
 		
 		$utils->log( "Setting the {$addon} option to {$e20r_roles_addons[ $addon ]['status']}" );
 		update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
+		update_option( "e20r_roles_{$addon}_licensed", $e20r_roles_addons[ $addon ]['active_license'], false );
 		
 		return $is_active;
 	}
