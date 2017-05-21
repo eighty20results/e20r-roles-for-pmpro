@@ -5,7 +5,7 @@ Description: Manages membership roles & capabilities for Paid Memberships Pro us
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-roles-for-pmpro
 Author: Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: https://eighty20results.com/thomas-sjolshagen/
-Version: 2.1.2
+Version: 2.1.3
 License: GPL2
 Text Domain: e20r-roles-for-pmpro
 Domain Path: /languages
@@ -118,7 +118,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 		    
 		    $utils->log( "Checking that we're not working on a license check (loopback): " . print_r( $_REQUEST, true ) );
 		    
-		    if ( false !== $utils->get_variable( 'slm_action', false ) && false == preg_match( "/eighty20results.com/", Licensing::E20R_LICENSE_SERVER_URL ) ) {
+		    if ( false !== $utils->get_variable( 'slm_action', false ) && false != preg_match( "/eighty20results.com/", Licensing::E20R_LICENSE_SERVER_URL ) ) {
 		        $utils->log("Processing license server check (self referential check???)");
 		        return;
             }
