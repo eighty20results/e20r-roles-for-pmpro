@@ -423,6 +423,11 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
 				
+				if ( false === self::check_requirements( $stub ) ) {
+					$utils->log("Requirements check failed for {$stub}");
+					return;
+				}
+    
 				self::$instance->add_level_filters();
 				
 				/**
@@ -446,11 +451,17 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
             }
             
 			foreach ( $level_settings as $level_id => $settings ) {
-				
-				$utils->log( "Loading capability filter for level {$level_id}" );
-				
-				// "e20r_roles_level_{$level_id}_capabilities", $capabilities, $level_id, $role_name
-				add_filter( "e20r_roles_level_{$level_id}_capabilities", array( $this, 'return_level_caps' ), 10, 3 );
+    
+				if ( $level_id > 0 ) {
+					
+				    $utils->log( "Loading capability filter for level {$level_id}" );
+					
+					// "e20r_roles_level_{$level_id}_capabilities", $capabilities, $level_id, $role_name
+					add_filter( "e20r_roles_level_{$level_id}_capabilities", array(
+						$this,
+						'return_level_caps'
+					), 10, 3 );
+				}
 			}
 		}
 		

@@ -537,6 +537,11 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Example_Addon' ) ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
 				
+				if ( false === self::check_requirements( $stub ) ) {
+					$utils->log("Requirements check failed for {$stub}");
+					return;
+				}
+				
 				/**
 				 * Membership related settings for role(s) add-on
 				 */

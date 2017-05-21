@@ -2846,6 +2846,11 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
 				
+				if ( false === self::check_requirements( $stub ) ) {
+					$utils->log("Requirements check failed for {$stub}");
+					return;
+				}
+    
 				add_filter( 'e20r_roles_addon_has_access', array( self::get_instance(), 'has_access' ), 10, 4 );
 				
 				$can_global_post = get_option( '_bbp_allow_global_access' );
