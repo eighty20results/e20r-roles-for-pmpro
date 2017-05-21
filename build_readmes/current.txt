@@ -1,1 +1,1 @@
-ENHANCEMENT/FIX: Use default logging method
+BUG/FIX: Didn't identify self-referential license check correctly

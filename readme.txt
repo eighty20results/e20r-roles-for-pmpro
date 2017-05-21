@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: pmpro, paid memberships pro, membership plugin, membership, wordpress roles, bbpress, buddypress, capabilities, membership capabilities, pmpro add-on, pmpro addon
 Requires at least: 4.7
 Tested up to: 4.7.5
-Stable tag: 2.1.0
+Stable tag: 2.1.4
 =========
 
 Appends a WordPress Role to each user's account during checkout where the role uses the Membership Level as it's displayed name.
@@ -52,6 +52,31 @@ Requires the BuddyPress plugin if you enable the BuddyPress Roles module (Not ye
  Please report your issue to us by using the (E20R Roles for PMPro)[link="https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/"] Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day.
 
 = Changelog =
+== 2.1.4 ==
+
+* BUG/FIX: Didn't identify self-referential license check correctly
+
+== 2.1.3 ==
+
+* ENHANCEMENT: Would loop indefinitely if running on licensing server
+
+== 2.1.2 ==
+
+* BUG/FIX: Utilities attempted called w/o beind declared
+* ENHANCEMENT/FIX: Don't reach out to remote server unless the license key is present
+* ENHANCEMENT/FIX: Check requirements if the add-on is enabled/active
+* ENHANCEMENT: Improved documentation
+* ENHANCEMENT: Refactor & update version number
+* ENHANCEMENT: Use the global variable to check whether add-on is supposed to be active or not
+
+== 2.1.1 ==
+
+* BUG/FIX: Attempted to verify invalid licenses
+* BUG/FIX: Avoid unneeded license checks
+* ENHANCEMENT/FIX: Trigger license check if license is inactive _or_ the saved license is expiring.
+* ENHANCEMENT: Use filter to exclude add-ons or licenses from checks
+* ENHANCEMENT: Additional function doc
+
 == 2.1.0 ==
 
 * ENHANCEMENT/FIX: Use default logging method
