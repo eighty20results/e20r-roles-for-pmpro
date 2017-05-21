@@ -19,18 +19,23 @@
 
 namespace E20R\Roles_For_PMPro;
 
-
-use E20R\Roles_For_PMPro\Addon\E20R_Roles_Addon;
+use E20R\Utilities\Utilities;
 use E20R\Utilities\Cache;
 
 class PMPro_Content_Access {
 	
 	private static $instance = null;
 	
+	/**
+	 * PMPro_Content_Access constructor.
+	 */
 	private function __construct() {
 	
 	}
 	
+	/**
+	 * Load filters for managing PMPro Content access
+	 */
 	public static function load() {
 		
 		add_filter( 'pmpro_has_membership_access_filter', array(
@@ -98,6 +103,14 @@ class PMPro_Content_Access {
 		return $post_levels;
 	}
 	
+	/**
+	 * Is the post_id protected by the specified membership level
+	 *
+	 * @param int $level_id
+	 * @param int $post_id
+	 *
+	 * @return bool
+	 */
 	public static function level_has_post_access( $level_id, $post_id ) {
 		
 		$level_map = array();
