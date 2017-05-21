@@ -5,7 +5,7 @@ Description: Manages membership roles & capabilities for Paid Memberships Pro us
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-roles-for-pmpro
 Author: Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: https://eighty20results.com/thomas-sjolshagen/
-Version: 2.1.0
+Version: 2.1.1
 License: GPL2
 Text Domain: e20r-roles-for-pmpro
 Domain Path: /languages
@@ -116,8 +116,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 			
 			$this->load_addon_settings();
 			
+			add_action( 'init', array( $this, 'load_translation' ) );
+			add_action( 'plugins_loaded', array(PMPro_Content_Access::get_instance(), 'load' ), 10 );
+			
 			add_filter( 'e20r-licensing-text-domain', array( $this, 'set_translation_domain' ), 10, 1 );
-			add_filter( 'pmpro_has_membership_access_filter', array( PMPro_Content_Access::get_instance(), 'grant_admin_access_to_content' ), 999, 4 );
 			
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_register_scripts' ), 9 );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 20 );
@@ -143,11 +145,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 			add_action( 'pmpro_delete_membership_level', array( $this, 'delete_level_settings' ), 10, 1 );
 			
 			// add_action( 'pmpro_custom_advanced_settings', array( $this, 'global_settings_page' ), 10 );
-			
-			add_action( 'init', array( $this, 'load_translation' ) );
-			add_action( 'plugins_loaded', array(PMPro_Content_Access::get_instance(), 'load' ), 10 );
    
-			
 			add_action( 'admin_menu', array( $this, 'load_admin_settings_page' ), 10 );
 			add_action( 'admin_init', array( $this, 'check_license_warnings' ) );
 			
@@ -279,9 +277,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 					foreach ( $files as $file ) {
 						
 						if ( '.' === $file || '..' === $file || 'e20r-roles-addon' === $file ) {
-							if ( WP_DEBUG ) {
-								error_log( "Skipping: {$file}" );
-							}
+							
+						    $utils->log( "Skipping: {$file}" );
 							continue;
 						}
 						
