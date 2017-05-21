@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 1.1
+ * @version 1.2
  *
  */
 
@@ -236,6 +236,15 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			global $current_user;
 			
 			$settings     = self::get_license_settings( $product );
+			
+			if ( empty( $settings['key'] ) ) {
+				
+			    $utils->log("{$product} has no key stored. Returning false" );
+			    return $license_status;
+			}
+			
+			$utils->log("Local license settings for {$product}: " . print_r( $settings, true ) );
+			
 			$product_name = $settings['fulltext_name'];
 			
 			// Configure request for license check
@@ -246,6 +255,8 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				// 'registered_domain' => $_SERVER['SERVER_NAME']
 			);
 			
+			$utils->log("Transmitting request to License server for {$product}");
+   
 			$decoded = self::send_to_license_server( $api_params );
 			
 			// License not validated
@@ -451,6 +462,8 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		private static function send_to_license_server( $api_params ) {
 			
 			$utils = Utilities::get_instance();
+			
+			$utils->log("Attmpting remote connection to " . self::E20R_LICENSE_SERVER_URL );
 			
 			// Send query to the license manager server
 			$response = wp_remote_get(
