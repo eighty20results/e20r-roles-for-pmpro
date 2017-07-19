@@ -23,8 +23,8 @@ jQuery(document).ready(function ($) {
     var vars = e20r_roles_for_pmpro_vars;
 
     html += '<div id="repair_roles_container">';
-    html += '<label for="repair_roles" id="repair_roles_label">' + e20r_roles_for_pmpro_vars.desc + '</label>';
-    html += '<input id="repair_roles" name="repair_roles" type="submit" class="button-primary" value="' + e20r_roles_for_pmpro_vars.repair + '" />';
+    html += '<label for="repair_roles" id="repair_roles_label">' + vars.desc + '</label>';
+    html += '<input id="repair_roles" name="repair_roles" type="submit" class="button-primary" value="' + vars.repair + '" />';
     html += '<p id="repaired_roles"></p>';
     html += '</div>';
 
@@ -36,17 +36,17 @@ jQuery(document).ready(function ($) {
 
         $.ajax({
             type: "POST",
-            url: e20r_roles_for_pmpro_vars.ajaxurl,
-            timeout: e20r_roles_for_pmpro_vars.timeout,
+            url: vars.ajaxurl,
+            timeout: vars.timeout,
             data: {
                 action: vars.ajax_action,
                 _ajax_nonce: vars.nonce
             },
             beforeSend: function () {
-                $("#repair_roles").val(e20r_roles_for_pmpro_vars.working);
+                $("#repair_roles").val(vars.working);
             }, //show loading just when link is clicked
             complete: function () {
-                $("#repair_roles").val(e20r_roles_for_pmpro_vars.done);
+                $("#repair_roles").val(vars.done);
             }, //stop showing loading when the process is complete
             success: function (html) { //so, if data is retrieved, store it in html
                 var $repaired_roles = $('#repaired_roles');
@@ -56,7 +56,7 @@ jQuery(document).ready(function ($) {
                 if (html === 'failed') {
                     $repaired_roles.text(html);
                 } else {
-                    $repaired_roles.text(html + e20r_roles_for_pmpro_vars.fixed);
+                    $repaired_roles.text(html + vars.fixed);
                     $('#repair_roles').attr('disabled', 'disabled');
                 }
             }
