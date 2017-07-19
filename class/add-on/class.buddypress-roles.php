@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) $today.year. - Eighty / 20 Results by Wicked Strong Chicks.
+ * Copyright (c) 2017 - Eighty / 20 Results by Wicked Strong Chicks.
  * ALL RIGHTS RESERVED
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,9 +28,9 @@ use E20R\Licensing;
 if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 	
 	class BuddyPress_Roles extends E20R_Roles_Addon {
-  
+		
 		const CACHE_GROUP = 'buddypress_roles';
-  
+		
 		/**
 		 * The name of this class
 		 *
@@ -110,7 +110,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			$utils = Utilities::get_instance();
 			
 			if ( empty( $this->class_name ) ) {
-				$utils->log("Setting class name by extracting it...");
+				$utils->log( "Setting class name by extracting it..." );
 				$this->class_name = $this->maybe_extract_class_name( get_class( self::$instance ) );
 			}
 			
@@ -127,8 +127,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			$class      = self::get_instance();
 			$utils      = Utilities::get_instance();
 			$class_name = $class->get_class_name();
-            
-            $utils->log( "Loading the {$class_name} class action(s) " );
+			
+			$utils->log( "Loading the {$class_name} class action(s) " );
 			
 			global $e20r_roles_addons;
 			
@@ -157,11 +157,11 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			if ( ! isset( $settings['new_licenses'] ) ) {
 				$settings['new_licenses'] = array();
-				$utils->log("Init array of licenses entry");
+				$utils->log( "Init array of licenses entry" );
 			}
 			
 			$stub = strtolower( $this->get_class_name() );
-			$utils->log("Have " . count( $settings['new_licenses'] ) . " new licenses to process already. Adding {$stub}... ");
+			$utils->log( "Have " . count( $settings['new_licenses'] ) . " new licenses to process already. Adding {$stub}... " );
 			
 			$settings['new_licenses'][ $stub ] = array(
 				'label_for'     => $stub,
@@ -178,7 +178,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			return $settings;
 		}
-  
+		
 		
 		/**
 		 * Check access permissions based on access type (read/add/edit)
@@ -279,16 +279,17 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			global $e20r_roles_addons;
 			
-			$stub = strtolower( $this->get_class_name() );
+			$stub  = strtolower( $this->get_class_name() );
 			$utils = Utilities::get_instance();
-   
+			
 			// Are we supposed to be active?
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
-       
-			    $utils->log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
+				
+				$utils->log( "The {$e20r_roles_addons[$stub]['label']} add-on is disabled" );
+				
 				return $has_access;
 			}
-   
+			
 			// Anybody can read the content
 			if ( true == $this->load_option( 'global_anon_read' ) ) {
 				
@@ -323,9 +324,9 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			$stub  = strtolower( $this->get_class_name() );
 			$utils = Utilities::get_instance();
-            
-            $utils->log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
-            
+			
+			$utils->log( "Adding the BuddyPress capabilities to the membership level capabilities?" );
+			
 			if ( false == $e20r_roles_addons[ $stub ]['is_active'] ) {
 				return $capabilities;
 			}
@@ -334,7 +335,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			
 			if ( isset( $level_settings[ $level_id ] ) ) {
 				
-				$preserve = array_diff_assoc(  $level_settings[ $level_id ]['capabilities'], $capabilities );
+				$preserve = array_diff_assoc( $level_settings[ $level_id ]['capabilities'], $capabilities );
 				
 				$utils->log( "Keeping the following capabilities: " . print_r( $preserve, true ) );
 				$utils->log( "... for the existing level specific capabilities: " . print_r( $capabilities, true ) );
@@ -379,12 +380,12 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 		private function load_defaults() {
 			
 			return array(
-				'global_anon_read'   => false,
-				'deactivation_reset' => false,
-				'level_settings'     => array(
-					- 1 => array(
-						'capabilities'     => array(),
-						'forum_permission' => 'no_access',
+				'protect_private_groups' => false,
+				'deactivation_reset'     => false,
+				'level_settings'         => array(
+					-1 => array(
+						'private_groups'  => array(),
+						'activity_stream' => 'no_access',
 					),
 				),
 			);
@@ -447,7 +448,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				return $is_active;
 			}
 			
-            return parent::toggle_addon( $addon, $is_active );
+			return parent::toggle_addon( $addon, $is_active );
 		}
 		
 		/**
@@ -485,13 +486,14 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				'register_settings',
 			), 10, 1 );
 			
-			if ( true === parent::is_enabled( $stub ) ) {
+			if ( true === parent::is_enabled( $stub ) && function_exists('bp_has_groups' ) ) {
 				
 				$utils->log( "Loading other actions/filters for {$e20r_roles_addons[$stub]['label']}" );
 				
 				if ( false === self::check_requirements( $stub ) ) {
-					$utils->log("Requirements check failed for {$stub}");
-				    return;
+					$utils->log( "Requirements check failed for {$stub}" );
+					
+					return;
 				}
 				
 				/**
@@ -509,6 +511,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				
 				// self::get_instance()->configure_forum_admin_capabilities();
 			}
+		}
+		
+		public function assign_private_group_to_level( $level_id, $group_id ) {
+		
 		}
 		
 		/**
@@ -542,11 +548,53 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 							'label'           => __( "Clean up on Deactivate", E20R_Roles_For_PMPro::plugin_slug ),
 							'render_callback' => array( $this, 'render_forum_cleanup' ),
 						),
+						array(
+							'id'              => 'protect_private_groups',
+							'label'           => __( "Protect Private BuddyPress Groups", E20R_Roles_For_PMPro::plugin_slug ),
+							'render_callback' => array( $this, 'render_private_group_protect' ),
+						),
+						array(
+							'id'              => 'membership_groups',
+							'label'           => __( "BuddyPress Group for Membership Level(s)", E20R_Roles_For_PMPro::plugin_slug ),
+							'render_callback' => array( $this, 'render_membership_groups' ),
+						),
+      
 					),
 				),
 			);
 			
 			return $settings;
+		}
+		
+		public function render_membership_groups() {
+			
+			$member_groups = $this->load_option( 'membership_groups' );
+			
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Do we need to Create Membership (private) groups? " . ( $member_groups == true ? 'Yes' : 'No' ) );
+			?>
+            <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-membership_groups"
+                   name="<?php esc_attr_e( $this->option_name ); ?>[membership_groups]"
+                   value="1" <?php checked( 1, $member_groups ); ?> />
+			<?php
+		}
+		
+		/**
+		 * Checkbox for the option to protect all private BuddyPress groups
+		 */
+		public function render_private_group_protect() {
+			
+			$protect = $this->load_option( 'protect_private_groups' );
+			
+			$utils = Utilities::get_instance();
+			
+			$utils->log( "Do we need to protect all private groups? " . ( $protect == true ? 'Yes' : 'No' ) );
+			?>
+            <input type="checkbox" id="<?php esc_attr_e( $this->option_name ); ?>-protect_private_groups"
+                   name="<?php esc_attr_e( $this->option_name ); ?>[protect_private_groups]"
+                   value="1" <?php checked( 1, $protect ); ?> />
+			<?php
 		}
 		
 		/**
@@ -576,7 +624,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 		public function validate_settings( $input ) {
 			
 			$utils = Utilities::get_instance();
-            $utils->log( "Input for save in BuddyPress_Roles:: " . print_r( $input, true ) );
+			$utils->log( "Input for save in BuddyPress_Roles:: " . print_r( $input, true ) );
 			
 			$defaults = $this->load_defaults();
 			
@@ -585,10 +633,6 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				if ( false !== stripos( 'level_settings', $key ) && isset( $input[ $key ] ) ) {
 					
 					foreach ( $input['level_settings'] as $level_id => $settings ) {
-						
-						if ( isset( $this->settings['level_settings'][ $level_id ]['capabilitiies'] ) ) {
-							unset( $this->settings['level_settings'][ $level_id ]['capabilitiies'] );
-						}
 						
 						// $this->settings['level_settings'][ $level_id ]['capabilities'] = $this->select_capabilities( $settings['forum_permission'] );
 					}
@@ -601,8 +645,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				}
 				
 			}
-            
-            $utils->log( "BuddyPress_Roles saving " . print_r( $this->settings, true ) );
+			
+			$utils->log( "BuddyPress_Roles saving " . print_r( $this->settings, true ) );
 			
 			return $this->settings;
 		}
@@ -688,7 +732,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 		 */
 		public function save_level_settings( $level_id, $active_addons ) {
 			
-			$stub = strtolower( $this->get_class_name() );
+			$stub  = strtolower( $this->get_class_name() );
 			$utils = Utilities::get_instance();
 			
 			if ( ! in_array( $stub, $active_addons ) ) {
@@ -709,15 +753,12 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			$level_settings = $this->load_option( 'level_settings' );
 			
 			if ( ! isset( $level_settings[ $level_id ] ) ) {
-				$level_settings[ $level_id ] = array(
-					'capabilities'     => array(),
-					'forum_permission' => 'no_access',
-				);
+				$level_settings[ $level_id ] = $this->load_defaults()[-1];
 			}
 			
-			$level_settings[ $level_id ]['forum_permission'] = $utils->get_variable( 'e20r_buddypress_settings-forum_permission', array() );
+			$level_settings[ $level_id ]['activity_stream'] = $utils->get_variable( 'e20r_buddypress_settings-activity_stream', array() );
 			
-			$utils->log( "Current forum permissions for {$level_id}: {$level_settings[$level_id]['forum_permission']}" );
+			$utils->log( "Current Activity Stream Access for {$level_id}: {$level_settings[$level_id]['activity_stream']}" );
 			
 			if ( isset( $level_settings[ - 1 ] ) ) {
 				unset( $level_settings[ - 1 ] );
@@ -750,10 +791,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			$level_settings = $this->load_option( 'level_settings' );
 			
 			if ( ! isset( $level_settings[ $level_id ] ) ) {
-				$level_settings[ $level_id ] = array(
-					'capabilities'     => array(),
-					'forum_permission' => 'no_access',
-				);
+				$level_settings[ $level_id ] = $level_settings[ $level_id ] = $this->load_defaults()[-1];
 			}
 			
 			$forum_permission = $level_settings[ $level_id ]['forum_permission'];
@@ -762,6 +800,11 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				$forum_permission = $forum_permission[0];
 			}
 			
+			$groups = array(
+			        
+            );
+			
+			$group_list = bp_has_groups( $groups );
 			?>
             <h4><?php _e( 'BuddyPress Configuration', E20R_Roles_For_PMPro::plugin_slug ); ?></h4>
             <table class="form-table">
@@ -772,6 +815,11 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
                     </th>
                     <td class="e20r-buddypress-settings-select">
                         <select name="e20r_buddypress_settings-forum_permission" id="e20r-roles-buddypress-permissions">
+                            <?php
+                            foreach( $group_list as $group ) {
+                                
+                            }
+                            ?>
                             <option value="no_access" <?php selected( 'no_access', $forum_permission ); ?>><?php _e( "No Access", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
 
                             <option value="read_only" <?php selected( 'read_only', $forum_permission ); ?>><?php _e( "Read Only", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
@@ -784,11 +832,31 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
                         <small><?php _e( "This membership level grants an active member one or more of the following rights to the bbPress forum(s) on this site...", E20R_Roles_For_PMPro::plugin_slug ); ?></small>
                     </td>
                 </tr>
+
+                <tr class="e20r-buddypress-settings">
+                    <th scope="row" valign="top"><label
+                                for="e20r-roles-buddypress-private_groups"><?php _e( "Forum access", E20R_Roles_For_PMPro::plugin_prefix ); ?></label>
+                    </th>
+                    <td class="e20r-buddypress-settings-select">
+                        <select name="e20r_buddypress_settings-private_groups" id="e20r-roles-buddypress-private_groups">
+                            <option value="no_access" <?php selected( 'no_access', $forum_permission ); ?>><?php _e( "No Access", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+
+                            <option value="read_only" <?php selected( 'read_only', $forum_permission ); ?>><?php _e( "Read Only", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="add_replies" <?php selected( 'add_replies', $forum_permission ); ?>><?php _e( "Can reply to existing topic(s)", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="add_threads" <?php selected( 'add_threads', $forum_permission ); ?>><?php _e( "Can create new topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="add_forum" <?php echo selected( 'add_forum', $forum_permission ); ?>><?php _e( "Can create new forum(s), topic(s), reply, and read", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="forum_support" <?php selected( 'forum_support', $forum_permission ); ?>><?php _e( "Has support rights to forum(s)", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                            <option value="forum_admin" <?php selected( 'forum_admin', $forum_permission ); ?>><?php _e( "Has full admin rights for bbPress", E20R_Roles_For_PMPro::plugin_slug ); ?></option>
+                        </select><br/>
+                        <small><?php _e( "This membership level grants an active member one or more of the following rights to the bbPress forum(s) on this site...", E20R_Roles_For_PMPro::plugin_slug ); ?></small>
+                    </td>
+                </tr>
+                
                 </tbody>
             </table>
 			<?php
 		}
-  
+		
 		/**
 		 * Fetch the properties for BuddyPress
 		 *
