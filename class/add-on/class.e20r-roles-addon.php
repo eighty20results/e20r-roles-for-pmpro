@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) $today.year. - Eighty / 20 Results by Wicked Strong Chicks.
+ * Copyright (c) 2017 - Eighty / 20 Results by Wicked Strong Chicks.
  * ALL RIGHTS RESERVED
  *
  * This program is free software: you can redistribute it and/or modify
@@ -217,13 +217,13 @@ class E20R_Roles_Addon {
 		
 		$e20r_roles_addons[ $addon ]['is_active'] = $is_active && $e20r_roles_addons[ $addon ]['active_license'];
 		
-		$e20r_roles_addons[ $addon ]['status']    = ( $is_active ? 'active' : 'deactivated' );
+		$e20r_roles_addons[ $addon ]['status']    = ( $e20r_roles_addons[ $addon ]['is_active'] ? 'active' : 'deactivated' );
 		
 		$utils->log( "Setting the {$addon} option to {$e20r_roles_addons[ $addon ]['status']}" );
-		update_option( "e20r_roles_{$addon}_enabled", $is_active, true );
+		update_option( "e20r_roles_{$addon}_enabled", $e20r_roles_addons[ $addon ]['is_active'], true );
 		update_option( "e20r_roles_{$addon}_licensed", $e20r_roles_addons[ $addon ]['active_license'], false );
 		
-		return $is_active;
+		return $e20r_roles_addons[ $addon ]['is_active'];
 	}
 	
 	public static function check_requirements( $stub ) {
