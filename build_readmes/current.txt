@@ -1,1 +1,3 @@
-BUG/FIX: Didn't identify self-referential license check correctly
+BUG FIX: Fatal error during upgrade of the plugin supported by this add-on
+ENHANCEMENT: Update copyright notice
+ENHANCEMENT: Use defined variable for admin JavaScript
