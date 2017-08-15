@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 1.2
+ * @version 1.3
  *
  */
 
@@ -553,7 +553,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				__( "E20R Licenses", self::$text_domain ),
 				'manage_options',
 				'e20r-licensing',
-				array( self::get_instance() , 'licensing_page' )
+				array( $this , 'licensing_page' )
 			);
 		}
 		
