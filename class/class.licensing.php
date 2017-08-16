@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 1.3
+ * @version 1.4
  *
  */
 
 namespace E20R\Licensing;
 
-use E20R\Utilities\Utilities;
-use E20R\Utilities\Cache;
+use E20R\Payment_Warning\Utilities\Utilities;
+use E20R\Payment_Warning\Utilities\Cache;
 
 if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 	
@@ -72,13 +72,13 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			
 			$utils->log( "Checking license for {$product_stub}" );
 			
-			if ( WP_DEBUG ) {
+			if ( true === $force ) {
 				$utils->log("Clearing license cache");
 				Cache::delete( self::CACHE_KEY, self::CACHE_GROUP );
 			}
 			
 			$excluded = apply_filters( 'e20r_licensing_excluded', array( 'e20r_default_license', 'example_addon', 'new_licenses' ) );
-   
+			
 			if ( ! in_array( $product_stub, $excluded ) && ( null === ( $license_settings = Cache::get( self::CACHE_KEY, self::CACHE_GROUP ) ) || true === $force ) ) {
 				
 				$utils->log( "Invalid cache for " . self::CACHE_KEY );
@@ -239,8 +239,8 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			
 			if ( empty( $settings['key'] ) ) {
 				
-			    $utils->log("{$product} has no key stored. Returning false" );
-			    return $license_status;
+				$utils->log("{$product} has no key stored. Returning false" );
+				return $license_status;
 			}
 			
 			$utils->log("Local license settings for {$product}: " . print_r( $settings, true ) );
@@ -256,7 +256,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			);
 			
 			$utils->log("Transmitting request to License server for {$product}");
-   
+			
 			$decoded = self::send_to_license_server( $api_params );
 			
 			// License not validated
@@ -329,14 +329,20 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		}
 		
 		/**
-		 * @param $product
+		 * @param string $product
 		 *
 		 * @return array
 		 */
-		private static function get_license_settings( $product = 'e20r_default_license' ) {
+		private static function get_license_settings( $product = null ) {
+			
+			$utils = Utilities::get_instance();
+			
+			if ( is_null( $product ) ) {
+				$utils->log("No product key provided. Using default key (e20r_default_license)!");
+				$product = 'e20r_default_license';
+			}
 			
 			$settings = get_option( 'e20r_license_settings', self::default_settings( $product ) );
-			$utils = Utilities::get_instance();
 			
 			if ( 'e20r_default_license' == $product || empty( $product ) ) {
 				
@@ -548,6 +554,10 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		 */
 		public function load_license_settings_page() {
 			
+			$utils = Utilities::get_instance();
+			
+			$utils->log("Attempting to add options page for E20R Licenses from the Payment Warning plugin");
+			
 			$handle = add_options_page(
 				__( "E20R Licenses", self::$text_domain ),
 				__( "E20R Licenses", self::$text_domain ),
@@ -570,7 +580,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 			$utils = Utilities::get_instance();
 			
 			if ( ! is_admin() || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
-				$utils->log("Not in back-end");
+				$utils->log("AJAX request or not in wp-admin");
 				return false;
 			}
 			
@@ -603,6 +613,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				}
 			}
 			
+			$utils->log("Loading licensing page...");
 			return false;
 		}
 		
@@ -612,17 +623,18 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		static public function register_settings() {
 			
 			$utils = Utilities::get_instance();
+			$license_list = array();
 			
 			register_setting(
 				"e20r_license_settings", // group, used for settings_fields()
 				"e20r_license_settings",  // option name, used as key in database
-				'E20R\\Licensing\\Licensing::validate_settings'     // validation callback
+				'E20R\Licensing\Licensing::validate_settings'     // validation callback
 			);
 			
 			add_settings_section(
 				'e20r_licensing_section',
 				__( "Configure Licenses", self::$text_domain ),
-				'E20R\\Licensing\\Licensing::show_licensing_section',
+				'E20R\Licensing\Licensing::show_licensing_section',
 				'e20r-licensing'
 			);
 			
@@ -639,21 +651,21 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 					
 					unset( $settings[ $k ] );
 					update_option( 'e20r_license_settings', $settings, 'yes' );
-					$utils->log("Skipping {$k} with settings: " . print_r( $license, true ));
+					$utils->log("Skipping {$k} with settings (doesn't have a key yet): " . print_r( $license, true ));
 					continue;
 				}
 				
-				$utils->log( "Generate settings fields for {$k}" );
+				$utils->log( "Generate settings fields for {$k}?" );
 				
 				if ( $k !== 'example_addon' && $k !== 'new_licenses' && isset( $license['key'] ) && $license['key'] != 'e20r_default_license' && ! empty( $license['key'] ) ) {
 					
 					$utils->log( "Previously activated license: {$k}: adding {$license['fulltext_name']} fields" );
-					$utils->log( "License Settings: " . print_r( $license, true ) );
+					$utils->log( "Settings: " . print_r( $license, true ) );
 					
 					add_settings_field(
 						"{$license['key']}",
 						"{$license['fulltext_name']} (" . ucfirst( $license['status'] ) . ")",
-						'E20R\\Licensing\\Licensing::show_input',
+						'E20R\Licensing\Licensing::show_input',
 						'e20r-licensing',
 						'e20r_licensing_section',
 						array(
@@ -675,24 +687,23 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				
 				if ( 'new_licenses' === $k ) {
 					
-					$utils->log( "Processing: {$k}" );
-					
 					$new_licenses = $license;
 					
 					foreach ( $new_licenses as $nk => $new ) {
 						
-						$utils->log( "Processing new license field # {$nk} : {$new['new_product']}" );
+						$utils->log( "Processing: {$nk}" );
+						$utils->log( "Processing new license field for {$new['new_product']}" );
 						
 						// Skip if we've got this one in the list of licenses already.
 						
 						if ( ! in_array( $new['new_product'], $license_list ) && $nk !== 'example_addon' ) {
 							
-							$utils->log( "Including new license field for {$new['new_product']}" );
+							$utils->log( "Adding new license fields for {$new['new_product']} (one of " . count( $new_licenses ) . " unlicensed add-ons)" );
 							
 							add_settings_field(
 								"e20r_license_new_{$nk}",
 								sprintf( __( "Add %s license", self::$text_domain ), $new['fulltext_name'] ),
-								'E20R\\Licensing\\Licensing::show_input',
+								'E20R\Licensing\Licensing::show_input',
 								'e20r-licensing',
 								'e20r_licensing_section',
 								array(
@@ -708,6 +719,8 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 									'placeholder'   => $new['placeholder'],
 								)
 							);
+							
+							$utils->log("New license field(s) added for {$nk}");
 						}
 					}
 				}
@@ -716,7 +729,10 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		
 		public static function show_licensing_section() {
 			
-			$pricing_page = apply_filters( 'e20r-license-pricing-page-url', 'https://eighty20results.com/account/service-plan-levels/' );
+			$utils = Utilities::get_instance();
+			$utils->log("Loading section HTML for License Settings");
+			
+			$pricing_page = apply_filters( 'e20r-license-pricing-page-url', 'https://eighty20results.com/shop/' );
 			?>
             <p class="e20r-licensing-section"><?php _e( "This add-on is distributed under version 2 of the GNU Public License (GPLv2). One of the things the GPLv2 license grants is the right to use this software on your site, free of charge.", self::$text_domain ); ?></p>
             <p class="e20r-licensing-section">
@@ -735,13 +751,16 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		}
 		
 		/**
-         * Show input row for License page
-         *
+		 * Show input row for License page
+		 *
 		 * @param $args
 		 */
 		public static function show_input( $args ) {
 			
 			global $current_user;
+			$utils = Utilities::get_instance();
+			
+			$utils->log("Loading input HTML for: " . print_r( $args, true ));
 			
 			printf( '<input type="hidden" name="%1$s" value="%2$s" />', "{$args['option_name']}[fieldname][]", $args['value'] );
 			printf( '<input type="hidden" name="%1$s" value="%2$s" />', "{$args['option_name']}[fulltext_name][]", $args['fulltext_name'] );
@@ -797,7 +816,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 		public static function licensing_page() {
 			
 			$utils = Utilities::get_instance();
-			$utils->log("Testing access for Licensing page in Payment Warning");
+			$utils->log("Testing access for Licensing page in Payment Warning plugin");
 			
 			if ( ! function_exists( "current_user_can" ) || ( ! current_user_can( "manage_options" ) && ! current_user_can( "e20r_license_admin" ) ) ) {
 				wp_die( __( "You are not permitted to perform this action.", self::$text_domain ) );
@@ -824,7 +843,7 @@ if ( ! class_exists( 'E20R\Licensing\Licensing' ) ) {
 				if ( in_array( $prod, array( 'e20r_default_license', 'new_licenses', 'example_addon' ) ) ) {
 					continue;
 				}
-    
+				
 				$license_valid = self::is_licensed( $prod ) && ( isset( $license['status'] ) && 'active' === $license['status'] );
 				
 				?>
