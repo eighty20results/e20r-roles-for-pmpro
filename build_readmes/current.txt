@@ -1,3 +1,2 @@
-BUG FIX: Fatal error during upgrade of the plugin supported by this add-on
-ENHANCEMENT: Update copyright notice
-ENHANCEMENT: Use defined variable for admin JavaScript
+BUG FIX: Didn't always load the licensing_page() handler
+ENHANCEMENT: Updated to version 1.4 of the Licensing class
