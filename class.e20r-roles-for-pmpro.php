@@ -701,33 +701,60 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 			
 			wp_enqueue_script( E20R_Roles_For_PMPro::plugin_slug . '-admin' );
 		}
-		
+  
 		/**
-		 * Class auto-loader for this plugin
+		 * Class auto-loader for the E20R Roles for PMPro plugin
 		 *
 		 * @param string $class_name Name of the class to auto-load
 		 *
 		 * @since  1.0
-		 * @access public
+		 * @access public static
 		 */
 		public static function auto_loader( $class_name ) {
 			
-			if ( false === strpos( $class_name, 'E20R' ) ) {
+			if ( false === stripos( $class_name, 'e20r' ) ) {
 				return;
 			}
 			
-			$parts = explode( '\\', $class_name );
-			$name  = strtolower( preg_replace( '/_/', '-', $parts[ ( count( $parts ) - 1 ) ] ) );
+			$parts     = explode( '\\', $class_name );
+			$c_name    = strtolower( preg_replace( '/_/', '-', $parts[ ( count( $parts ) - 1 ) ] ) );
+			$base_path = plugin_dir_path( __FILE__ ) . 'classes/';
 			
-			$base_path = plugin_dir_path( __FILE__ ) . 'class';
-			$filename  = "class.{$name}.php";
-			
-			if ( file_exists( "{$base_path}/{$filename}" ) ) {
-				require_once( "{$base_path}/{$filename}" );
+			if ( file_exists( plugin_dir_path( __FILE__ ) . 'class/' ) ) {
+				$base_path = plugin_dir_path( __FILE__ ) . 'class/';
 			}
 			
-			if ( file_exists( "{$base_path}/add-on/{$filename}" ) ) {
-				require_once( "{$base_path}/add-on/{$filename}" );
+			$filename = "class.{$c_name}.php";
+			$iterator = new \RecursiveDirectoryIterator( $base_path, \RecursiveDirectoryIterator::SKIP_DOTS | \RecursiveIteratorIterator::SELF_FIRST | \RecursiveIteratorIterator::CATCH_GET_CHILD | \RecursiveDirectoryIterator::FOLLOW_SYMLINKS );
+			
+			/**
+			 * Loate class member files, recursively
+			 */
+			$filter = new \RecursiveCallbackFilterIterator( $iterator, function ( $current, $key, $iterator ) use ( $filename ) {
+				
+				$file_name = $current->getFilename();
+				
+				// Skip hidden files and directories.
+				if ( $file_name[0] == '.' || $file_name == '..' ) {
+					return false;
+				}
+				
+				if ( $current->isDir() ) {
+					// Only recurse into intended subdirectories.
+					return $file_name() === $filename;
+				} else {
+					// Only consume files of interest.
+					return strpos( $file_name, $filename ) === 0;
+				}
+			} );
+			
+			foreach ( new \ RecursiveIteratorIterator( $iterator ) as $f_filename => $f_file ) {
+				
+				$class_path = $f_file->getPath() . "/" . $f_file->getFilename();
+				
+				if ( $f_file->isFile() && false !== strpos( $class_path, $filename ) ) {
+					require_once( $class_path );
+				}
 			}
 		}
 		
