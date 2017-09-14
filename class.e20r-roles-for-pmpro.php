@@ -5,7 +5,7 @@ Description: Manages membership roles & capabilities for Paid Memberships Pro us
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-roles-for-pmpro
 Author: Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: https://eighty20results.com/thomas-sjolshagen/
-Version: 2.1.6
+Version: 2.1.7
 License: GPL2
 Text Domain: e20r-roles-for-pmpro
 Domain Path: /languages
@@ -42,6 +42,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	wp_die( __( "Cannot access", E20R_Roles_For_PMPro::plugin_slug ) );
 }
 
+if ( ! defined( 'E20R_ROLES_VERSION' ) ) {
+    define( 'E20R_ROLES_VERSION', '2.1.7' );
+}
 if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 	
 	global $e20r_roles_addons;
@@ -661,8 +664,8 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 				return;
 			}
 			
-			wp_enqueue_style( self::plugin_slug . '-admin', plugins_url( 'css/e20r-roles-for-pmpro-admin.css', __FILE__ ) );
-			wp_register_script( self::plugin_slug . '-admin', plugins_url( 'javascript/e20r-roles-for-pmpro-admin.js', __FILE__ ) );
+			wp_enqueue_style( E20R_Roles_For_PMPro::plugin_slug . '-admin', plugins_url( 'css/e20r-roles-for-pmpro-admin.css', __FILE__ ), null, E20R_ROLES_VERSION );
+			wp_register_script( E20R_Roles_For_PMPro::plugin_slug . '-admin', plugins_url( 'javascript/e20r-roles-for-pmpro-admin.js', __FILE__ ), array( 'jquery' ), E20R_ROLES_VERSION );
 			
 			$vars = array(
 				'desc'       => __( 'Levels not matching up, or missing?', E20R_Roles_For_PMPro::plugin_slug ),
@@ -677,9 +680,26 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 				'nonce'      => wp_create_nonce( E20R_Roles_For_PMPro::ajax_fix_action ),
 			);
 			
-			$key = self::plugin_prefix . 'vars';
+			$key = E20R_Roles_For_PMPro::plugin_prefix . 'vars';
 			
-			wp_localize_script( self::plugin_slug . '-admin', $key, $vars );
+			wp_localize_script( E20R_Roles_For_PMPro::plugin_slug . '-admin', $key, $vars );
+		}
+		
+		/**
+		 * Delayed enqueue of wp-admin JavasScript (allow unhook)
+		 *
+		 * @param $hook
+		 *
+		 * @since  1.0
+		 * @access public
+		 */
+		public function admin_enqueue_scripts( $hook ) {
+			
+			if ( 'toplevel_page_pmpro-membershiplevels' != $hook ) {
+				return;
+			}
+			
+			wp_enqueue_script( E20R_Roles_For_PMPro::plugin_slug . '-admin' );
 		}
 		
 		/**
@@ -709,23 +729,6 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\E20R_Roles_For_PMPro' ) ) {
 			if ( file_exists( "{$base_path}/add-on/{$filename}" ) ) {
 				require_once( "{$base_path}/add-on/{$filename}" );
 			}
-		}
-		
-		/**
-		 * Delayed enqueue of wp-admin JavasScript (allow unhook)
-		 *
-		 * @param $hook
-		 *
-		 * @since  1.0
-		 * @access public
-		 */
-		public function admin_enqueue_scripts( $hook ) {
-			
-			if ( 'toplevel_page_pmpro-membershiplevels' != $hook ) {
-				return;
-			}
-			
-			wp_enqueue_script( self::plugin_slug . '-admin' );
 		}
 		
 		/**
