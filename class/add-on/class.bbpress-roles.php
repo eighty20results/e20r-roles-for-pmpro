@@ -1387,9 +1387,9 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				$status  = bbp_set_user_role( $user->ID, "e20r_bbpress_level_{$level_id}_access" );
 				$current = bbp_get_user_role( $user->ID );
 				
-				$utils->log( "Status is {$status}" );
+				$utils->log( "Current is {$current} vs set status: {$status}" );
 				
-				if ( "e20r_bbpress_level_{$level_id}_access" === $current ) {
+				if ( "e20r_bbpress_level_{$level_id}_access" == $current ) {
 					return true;
 				}
 			}
