@@ -1,2 +1,5 @@
-BUG FIX: Didn't always load the licensing_page() handler
-ENHANCEMENT: Updated to version 1.4 of the Licensing class
+BUG FIX: Didn't always indicate that user had been assigned the level specific role
+BUG FIX: Add dependencies & version to scripts & styles being loaded
+ENHANCEMENT: Update the autoloader (more dynamic)
+ENHANCEMENT: Add version constant
+ENHANCEMENT: Refactor admin_enqueue_scripts()
