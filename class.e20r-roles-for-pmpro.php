@@ -31,11 +31,8 @@ Domain Path: /languages
 
 namespace E20R\Roles_For_PMPro;
 
-use E20R\Licensing\Licensing;
-use E20R\Roles_For_PMPro\Manage_Roles;
-use E20R\Roles_For_PMPro\Addon;
+use E20R\Utilities\Licensing\Licensing;
 use E20R\Utilities\Cache;
-use E20R\Utilities\PMPro_Members;
 use E20R\Utilities\Utilities;
 
 if ( ! defined( 'ABSPATH' ) ) {
