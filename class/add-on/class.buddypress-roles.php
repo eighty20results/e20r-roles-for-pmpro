@@ -140,30 +140,35 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			parent::load_addon( $stub );
 		}
 		
+		public function load_hooks() {
+			add_action( 'admin_init', array( $this, 'check_licenses' ) );
+		}
+		
 		/**
 		 * Filter Handler: Add the 'add bbPress add-on license' settings entry
 		 *
 		 * @filter e20r-license-add-new-licenses
 		 *
-		 * @param array $settings
+		 * @param array $license_settings
+         * @param array $plugin_settings
 		 *
 		 * @return array
 		 */
-		public function add_new_license_info( $settings ) {
+		public function add_new_license_info( $license_settings, $plugin_settings ) {
 			
 			global $e20r_roles_addons;
 			
 			$utils = Utilities::get_instance();
 			
-			if ( ! isset( $settings['new_licenses'] ) ) {
-				$settings['new_licenses'] = array();
+			if ( ! isset( $license_settings['new_licenses'] ) ) {
+				$license_settings['new_licenses'] = array();
 				$utils->log( "Init array of licenses entry" );
 			}
 			
 			$stub = strtolower( $this->get_class_name() );
-			$utils->log( "Have " . count( $settings['new_licenses'] ) . " new licenses to process already. Adding {$stub}... " );
+			$utils->log( "Have " . count( $license_settings['new_licenses'] ) . " new licenses to process already. Adding {$stub}... " );
 			
-			$settings['new_licenses'][ $stub ] = array(
+			$license_settings['new_licenses'][ $stub ] = array(
 				'label_for'     => $stub,
 				'fulltext_name' => $e20r_roles_addons[ $stub ]['label'],
 				'new_product'   => $stub,
@@ -173,10 +178,10 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 				'value'         => null,
 				'email_field'   => "license_email",
 				'email_value'   => null,
-				'placeholder'   => sprintf( __( "Paste the purchased E20R Roles %s key here", "e20r-licensing" ), $e20r_roles_addons[ $stub ]['label'] ),
+				'placeholder'   => sprintf( __( "Paste E20R Roles %s key here", "e20r-licensing" ), $e20r_roles_addons[ $stub ]['label'] ),
 			);
 			
-			return $settings;
+			return $license_settings;
 		}
 		
 		
@@ -480,7 +485,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\BuddyPress_Roles' ) ) {
 			add_filter( 'e20r-license-add-new-licenses', array(
 				self::get_instance(),
 				'add_new_license_info',
-			), 10, 1 );
+			), 10, 2 );
 			add_filter( 'e20r_roles_addon_options_buddypress_roles', array(
 				self::get_instance(),
 				'register_settings',

@@ -20,10 +20,11 @@
 namespace E20R\Roles_For_PMPro\Addon;
 
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro as E20R_Roles_For_PMPro;
-use E20R\Licensing;
+use E20R\Utilities\Licensing\Licensing;
+use E20R\Utilities\Licensing\License_Client;
 use E20R\Utilities\Utilities;
 
-class E20R_Roles_Addon {
+class E20R_Roles_Addon extends License_Client {
 	
 	/**
 	 * @var E20R_Roles_Addon
@@ -75,7 +76,7 @@ class E20R_Roles_Addon {
 		global $e20r_roles_addons;
 		
 		$utils = Utilities::get_instance();
-		$utils->log("Stub is: {$stub}");
+		$utils->log( "Stub is: {$stub}" );
 		
 		if ( empty( $stub ) || 'roles_addon' === $stub ) {
 			return;
@@ -96,50 +97,55 @@ class E20R_Roles_Addon {
 		*/
 	}
 	
+	public function load_hooks() {
+		add_action( 'admin_init', array( $this, 'check_licenses' ) );
+	}
+	
 	public static function is_enabled( $stub ) {
 		
 		$utils = Utilities::get_instance();
 		
-		$utils->log("Checking if {$stub} is enabled");
+		$utils->log( "Checking if {$stub} is enabled" );
 		
 		if ( $stub === 'example_addon' ) {
 			return false;
 		}
 		
 		$enabled = false;
-		$screen = null;
+		$screen  = null;
 		
 		global $e20r_roles_addons;
 		
-		$e20r_roles_addons[$stub]['is_active'] = get_option( "e20r_roles_{$stub}_enabled", false ) ? true : false;
-		$e20r_roles_addons[$stub]['active_license'] = get_option( "e20r_roles_{$stub}_licensed", false ) ? true : false;
+		$e20r_roles_addons[ $stub ]['is_active']      = get_option( "e20r_roles_{$stub}_enabled", false ) ? true : false;
+		$e20r_roles_addons[ $stub ]['active_license'] = get_option( "e20r_roles_{$stub}_licensed", false ) ? true : false;
 		
-		$utils->log("is_active setting for {$stub}: " . ( $e20r_roles_addons[$stub]['is_active'] ? 'True' : 'False' ) );
-		$utils->log("The {$stub} add-on is licensed? " . ( $e20r_roles_addons[$stub]['active_license'] ? 'Yes' : 'No') );
-
+		$utils->log( "is_active setting for {$stub}: " . ( $e20r_roles_addons[ $stub ]['is_active'] ? 'True' : 'False' ) );
+		$utils->log( "The {$stub} add-on is licensed? " . ( $e20r_roles_addons[ $stub ]['active_license'] ? 'Yes' : 'No' ) );
+		
 		/** Removed due to loop for intentionally disabled plugins/add-ons
-		if ( false === $enabled && true === $e20r_roles_addons[$stub]['disabled'] ) {
-			$utils->log("Forcing a remote check of the license" );
-			$force = true;
-		}
-		*/
+		 * if ( false === $enabled && true === $e20r_roles_addons[$stub]['disabled'] ) {
+		 * $utils->log("Forcing a remote check of the license" );
+		 * $force = true;
+		 * }
+		 */
 		
-		if ( false === $e20r_roles_addons[ $stub ]['active_license'] || ( true === $e20r_roles_addons[ $stub ]['active_license'] && true === Licensing\Licensing::is_license_expiring( $stub ) ) ) {
+		if ( false === $e20r_roles_addons[ $stub ]['active_license'] || ( true === $e20r_roles_addons[ $stub ]['active_license'] && true === Licensing::is_license_expiring( $stub ) ) ) {
 			
-			$utils->log("Checking license server (forced)");
-			$e20r_roles_addons[ $stub ]['active_license'] = Licensing\Licensing::is_licensed( $stub, true );
+			$utils->log( "Checking license server (forced)" );
+			$e20r_roles_addons[ $stub ]['active_license'] = Licensing::is_licensed( $stub, true );
 			update_option( "e20r_roles_{$stub}_licensed", $e20r_roles_addons[ $stub ]['active_license'], false );
 		}
 		
-		$e20r_roles_addons[ $stub ]['is_active'] = ( $e20r_roles_addons[$stub]['is_active'] && $e20r_roles_addons[$stub]['active_license'] );
+		$e20r_roles_addons[ $stub ]['is_active'] = ( $e20r_roles_addons[ $stub ]['is_active'] && $e20r_roles_addons[ $stub ]['active_license'] );
 		
-		if ( $e20r_roles_addons[$stub]['is_active'] ) {
-			$e20r_roles_addons[$stub]['status'] = 'active';
+		if ( $e20r_roles_addons[ $stub ]['is_active'] ) {
+			$e20r_roles_addons[ $stub ]['status'] = 'active';
 		} else {
-			$e20r_roles_addons[$stub]['status'] = 'deactivated';
+			$e20r_roles_addons[ $stub ]['status'] = 'deactivated';
 		}
 		
-		$utils->log("The {$stub} add-on is active? " . ( $e20r_roles_addons[$stub]['is_active'] ? 'Yes' : 'No') );
+		$utils->log( "The {$stub} add-on is active? " . ( $e20r_roles_addons[ $stub ]['is_active'] ? 'Yes' : 'No' ) );
+		
 		return $e20r_roles_addons[ $stub ]['is_active'];
 	}
 	
@@ -158,7 +164,8 @@ class E20R_Roles_Addon {
 		$class_array = explode( '\\', $string );
 		$name        = $class_array[ ( count( $class_array ) - 1 ) ];
 		
-		$utils->log("Using {$name} to load class");
+		$utils->log( "Using {$name} to load class" );
+		
 		return $name;
 	}
 	
@@ -176,7 +183,7 @@ class E20R_Roles_Addon {
 		
 		global $e20r_roles_addons;
 		
-		$utils = Utilities::get_instance();
+		$utils    = Utilities::get_instance();
 		$licensed = true;
 		
 		$utils->log( "In toggle_addon action handler for the {$e20r_roles_addons[$addon]['label']} add-on" );
@@ -184,7 +191,7 @@ class E20R_Roles_Addon {
 		if ( $is_active === false ) {
 			
 			$utils->log( "Deactivating the add-on so disable the license" );
-			Licensing\Licensing::deactivate_license( $addon );
+			Licensing::deactivate_license( $addon );
 		}
 		
 		if ( $is_active === false && true == $this->load_option( 'deactivation_reset' ) ) {
@@ -195,9 +202,9 @@ class E20R_Roles_Addon {
 			$utils->log( "Deactivate the {$e20r_roles_addons[ $addon ]['label']} capabilities for all levels & all user(s)!" );
 		}
 		
-		if ( true === $is_active && false === $e20r_roles_addons[$addon]['is_active'] ) {
+		if ( true === $is_active && false === $e20r_roles_addons[ $addon ]['is_active'] ) {
 			
-			$e20r_roles_addons[ $addon ]['active_license'] = Licensing\Licensing::is_licensed( $addon, true );
+			$e20r_roles_addons[ $addon ]['active_license'] = Licensing::is_licensed( $addon, true );
 			
 			if ( true !== $e20r_roles_addons[ $addon ]['active_license'] && is_admin() ) {
 				$utils->add_message(
@@ -207,7 +214,7 @@ class E20R_Roles_Addon {
 							E20R_Roles_For_PMPro::plugin_slug
 						),
 						$e20r_roles_addons[ $addon ]['label'],
-						Licensing\Licensing::get_license_page_url( $addon )
+						Licensing::get_license_page_url( $addon )
 					),
 					'error',
 					'backend'
@@ -217,7 +224,7 @@ class E20R_Roles_Addon {
 		
 		$e20r_roles_addons[ $addon ]['is_active'] = $is_active && $e20r_roles_addons[ $addon ]['active_license'];
 		
-		$e20r_roles_addons[ $addon ]['status']    = ( $e20r_roles_addons[ $addon ]['is_active'] ? 'active' : 'deactivated' );
+		$e20r_roles_addons[ $addon ]['status'] = ( $e20r_roles_addons[ $addon ]['is_active'] ? 'active' : 'deactivated' );
 		
 		$utils->log( "Setting the {$addon} option to {$e20r_roles_addons[ $addon ]['status']}" );
 		update_option( "e20r_roles_{$addon}_enabled", $e20r_roles_addons[ $addon ]['is_active'], true );
@@ -230,13 +237,13 @@ class E20R_Roles_Addon {
 		
 		global $e20r_roles_addons;
 		
-		if ( null === $stub || 'roles_addon' == $stub  ) {
+		if ( null === $stub || 'roles_addon' == $stub ) {
 			return;
 		}
 		
 		$utils = Utilities::get_instance();
 		
-		$utils->log("Checking requirements for {$stub}");
+		$utils->log( "Checking requirements for {$stub}" );
 		
 		$utils = Utilities::get_instance();
 		
@@ -272,6 +279,29 @@ class E20R_Roles_Addon {
 					'error',
 					'roles_addon'
 				);
+			}
+		}
+	}
+	
+	/**
+	 * Load a custom license warning on init
+	 */
+	public function check_licenses() {
+		
+		$utils = Utilities::get_instance();
+		
+		global $e20r_roles_addons;
+		
+		foreach ( $e20r_roles_addons as $product => $config ) {
+			
+			switch ( Licensing::is_license_expiring( $product ) ) {
+				
+				case true:
+					$utils->add_message( sprintf( __( 'The license for %s will renew soon. As this is an automatic payment, you will not have to do anything. To modify %syour license%s, you will need to go to %syour account page%s' ), $config['label'], '<a href="https://eighty20results.com/shop/licenses/" target="_blank">', '</a>', '<a href="https://eighty20results.com/account/" target="_blank">', '</a>' ), 'info', 'backend' );
+					break;
+				case - 1:
+					$utils->add_message( sprintf( __( 'Your %s license has expired. To continue to get updates and support for this plugin, you will need to %srenew and install your license%s.' ), $config['label'], '<a href="https://eighty20results.com/shop/licenses/" target="_blank">', '</a>' ), 'error', 'backend' );
+					break;
 			}
 		}
 	}
@@ -317,12 +347,12 @@ class E20R_Roles_Addon {
 		global $e20r_roles_addons;
 		$utils = Utilities::get_instance();
 		
-		foreach( $input as $i_key => $i_value  ) {
+		foreach ( $input as $i_key => $i_value ) {
 			
 			// Processing the 'is active' checkbox in the parent class only
 			if ( false != preg_match( '/is_(.*)_active', $i_key, $matches ) ) {
 				
-				$utils->log("Processing checkbox for: " . print_r( $matches, true ));
+				$utils->log( "Processing checkbox for: " . print_r( $matches, true ) );
 				/*
 				unset( $input[$i_key] );
 				*/
