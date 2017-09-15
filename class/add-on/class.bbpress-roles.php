@@ -19,14 +19,12 @@
 
 namespace E20R\Roles_For_PMPro\Addon;
 
-use Braintree\Util;
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro;
 use E20R\Roles_For_PMPro\Role_Definitions;
 use E20R\Roles_For_PMPro\PMPro_Content_Access;
 use E20R\Utilities\Cache;
-use E20R\Utilities\PMPro_Members;
+use E20R\Roles_For_PMPro\PMPro_Members;
 use E20R\Utilities\Utilities;
-use E20R\Licensing;
 
 if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 	

@@ -20,7 +20,7 @@
 namespace E20R\Roles_For_PMPro;
 
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro as E20R_Roles_For_PMPro;
-use E20R\Utilities\PMPro_Members as PMPro_Members;
+use E20R\Roles_For_PMPro\PMPro_Members as PMPro_Members;
 use E20R\Utilities\Utilities as Utilities;
 
 // Deny direct access to the file
