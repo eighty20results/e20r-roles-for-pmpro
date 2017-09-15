@@ -17,9 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace E20R\Utilities;
+namespace E20R\Roles_For_PMPro;
 
 use E20R\Roles_For_PMPro\E20R_Roles_For_PMPro AS E20R_Roles_For_PMPro;
+use E20R\Utilities\Utilities;
 use E20R\Utilities\Cache as Cache;
 
 // Deny direct access to the file
@@ -27,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	wp_die( __( "Cannot access file directly", E20R_Roles_For_PMPro::plugin_slug ) );
 }
 
-if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
+if ( ! class_exists( 'E20R\Roles_For_PMPro\PMPro_Members' ) ) {
 	
 	class PMPro_Members {
 		
@@ -66,8 +67,8 @@ if ( ! class_exists( 'E20R\\Utilities\\PMPro_Members' ) ) {
 			$class = self::$instance;
 			
 			// Actions that require us to clear all of the PMPro Membership caches
-			add_action( 'profile_update', 'PMPro_Members::clear_all_caches' );
-			add_action( 'edit_user_profile_update', 'PMPro_Members::clear_all_caches' );
+			add_action( 'profile_update', 'E20R\Roles_For_PMPro\PMPro_Members::clear_all_caches' );
+			add_action( 'edit_user_profile_update', 'E20R\Roles_For_PMPro\PMPro_Members::clear_all_caches' );
 			
 			// Actions that require us to clear membership level specific cache(s)
 			
