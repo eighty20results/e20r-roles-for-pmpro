@@ -148,7 +148,7 @@ if ( ! class_exists( 'E20R\Roles_For_PMPro\Addon\Level_Capabilities' ) ) {
 				'value'         => null,
 				'email_field'   => "license_email",
 				'email_value'   => null,
-				'placeholder'   => sprintf( __( "Paste E20R Roles %s key here", "e20r-licensing" ), $e20r_roles_addons[ $stub ]['label'] ),
+				'placeholder'   => sprintf( __( "Paste the %s key here", "e20r-licensing" ), $e20r_roles_addons[ $stub ]['label'] ),
 			);
 			
 			return $license_settings;
