@@ -2012,7 +2012,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 		 *
 		 * @return bool
 		 */
-		public function save_level_settings( $level_id, $active_addons ) {
+		public function save_level_settings( $level_id, $active_addons = array() ) {
 			
 			$utils = Utilities::get_instance();
 			
