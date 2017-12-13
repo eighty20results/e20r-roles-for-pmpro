@@ -1,5 +1,23 @@
-BUG FIX: Didn't always indicate that user had been assigned the level specific role
-BUG FIX: Add dependencies & version to scripts & styles being loaded
-ENHANCEMENT: Update the autoloader (more dynamic)
+ENHANCEMENT/FIX: Update licensing and utilities classes
+ENHANCEMENT/FIX: Remove class_exists() check for Role_Definitions
+ENHANCEMENT: Update placeholder key for new license key fields
 ENHANCEMENT: Add version constant
 ENHANCEMENT: Refactor admin_enqueue_scripts()
+ENHANCEMENT: Update the autoloader (more dynamic)
+ENHANCEMENT: Remove plugin specific utility classes in preparation for adding Utilities submodule
+ENHANCEMENT: Upgrade to using the shared Utilities library/module
+ENHANCEMENT: Add check_licenses method to E20R_Roles_Addon parent class
+ENHANCEMENT: Clean up utilties module gruff
+ENHANCEMENT: Remove unneeded namespace declarations
+ENHANCEMENT: Fix namespaces to match Utilities library/module for Licensing and Utilities classes
+ENHANCEMENT: Fix namespace for utilities module
+ENHANCEMENT: Move PMPro_Members to Roles_For_PMPro class
+ENHANCEMENT: Remove unused namespace declarations
+ENHANCEMENT: Update Utilties library/module
+ENHANCEMENT: Update placeholder key for new license key fields
+BUG FIX: Add dependencies & version to scripts & styles being loaded
+BUG FIX: Didn't always indicate that user had been assigned the level specific role
+BUG FIX: Load the correct Utilities class (from E20R\Utilities)
+BUG FIX: Fix namespace for PMPro_Members class (moved to E20R\Roles_For_PMPro
+BUG FIX: Update Namespace paths for PMPro_Members class
+BUG FIX: Didn't ensure $active_addons was an array

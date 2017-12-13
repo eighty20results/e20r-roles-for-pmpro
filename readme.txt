@@ -2,8 +2,8 @@
 Contributors: eighty20results
 Tags: pmpro, paid memberships pro, membership plugin, membership, wordpress roles, bbpress, buddypress, capabilities, membership capabilities, pmpro add-on, pmpro addon
 Requires at least: 4.7
-Tested up to: 4.8.1
-Stable tag: 2.1.6
+Tested up to: 4.9.1
+Stable tag: 2.1.7
 =========
 
 Appends a WordPress Role to each user's account during checkout where the role uses the Membership Level as it's displayed name.
@@ -52,6 +52,32 @@ Requires the BuddyPress plugin if you enable the BuddyPress Roles module (Not ye
  Please report your issue to us by using the (E20R Roles for PMPro)[link="https://eighty20results.com/support-forums/forum/support-forums/e20r-roles-for-pmpro/"] Support Forum on The Eighty / 20 Website, and we'll try to respond within 1 business day.
 
 = Changelog =
+== 2.1.7 ==
+
+* ENHANCEMENT/FIX: Update licensing and utilities classes
+* ENHANCEMENT/FIX: Remove class_exists() check for Role_Definitions
+* ENHANCEMENT: Update placeholder key for new license key fields
+* ENHANCEMENT: Add version constant
+* ENHANCEMENT: Refactor admin_enqueue_scripts()
+* ENHANCEMENT: Update the autoloader (more dynamic)
+* ENHANCEMENT: Remove plugin specific utility classes in preparation for adding Utilities submodule
+* ENHANCEMENT: Upgrade to using the shared Utilities library/module
+* ENHANCEMENT: Add check_licenses method to E20R_Roles_Addon parent class
+* ENHANCEMENT: Clean up utilties module gruff
+* ENHANCEMENT: Remove unneeded namespace declarations
+* ENHANCEMENT: Fix namespaces to match Utilities library/module for Licensing and Utilities classes
+* ENHANCEMENT: Fix namespace for utilities module
+* ENHANCEMENT: Move PMPro_Members to Roles_For_PMPro class
+* ENHANCEMENT: Remove unused namespace declarations
+* ENHANCEMENT: Update Utilties library/module
+* ENHANCEMENT: Update placeholder key for new license key fields
+* BUG FIX: Add dependencies & version to scripts & styles being loaded
+* BUG FIX: Didn't always indicate that user had been assigned the level specific role
+* BUG FIX: Load the correct Utilities class (from E20R\Utilities)
+* BUG FIX: Fix namespace for PMPro_Members class (moved to E20R\Roles_For_PMPro
+* BUG FIX: Update Namespace paths for PMPro_Members class
+* BUG FIX: Didn't ensure $active_addons was an array
+
 == 2.1.6 ==
 
 * BUG FIX: Didn't always load the licensing_page() handler
