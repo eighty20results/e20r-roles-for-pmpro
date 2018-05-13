@@ -2834,15 +2834,19 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 				self::get_instance(),
 				'add_capabilities_to_role',
 			), 10, 3 );
-			add_filter( 'e20r-license-add-new-licenses', array(
-				self::get_instance(),
-				'add_new_license_info',
-			), 10, 2 );
+			
 			add_filter( 'e20r_roles_addon_options_bbpress_roles', array(
 				self::get_instance(),
 				'register_settings',
 			), 10, 1 );
 			
+			if ( Utilities::is_admin() ) {
+				add_filter( 'e20r-license-add-new-licenses', array(
+					self::get_instance(),
+					'add_new_license_info',
+				), 10, 2 );
+            }
+            
 			global $current_user;
 			
 			if ( true === parent::is_enabled( $stub ) && function_exists( 'bbp_get_default_role' ) ) {
@@ -2869,34 +2873,52 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					update_option( '_bbp_default_role', 'e20r_bbpress_default_access' );
 				}
 				
-				add_action( 'admin_menu', array( self::get_instance(), 'add_pmpro_metabox' ), 10 );
+				if ( Utilities::is_admin() ) {
+					add_action( 'admin_menu', array( self::get_instance(), 'add_pmpro_metabox' ), 10 );
+					add_filter( 'manage_users_custom_column', array(
+						self::get_instance(),
+						'add_user_role_to_list',
+					), 20, 3 );
+					
+					add_filter( 'manage_forum_posts_columns', array(
+						self::get_instance(),
+						'set_forum_column_header',
+					), 99 );
+					add_action( 'manage_forum_posts_custom_column', array(
+						self::get_instance(),
+						'level_column_content',
+					), 10, 2 );
+					add_action( 'save_post_forum', array( self::get_instance(), 'save_forum_protection' ), 99 );
+					
+					/**
+					 * Membership related settings for role(s) add-on
+					 */
+					add_action( 'e20r_roles_level_settings', array( self::get_instance(), 'load_level_settings' ), 10, 2 );
+					add_action( 'e20r_roles_level_settings_save', array(
+						self::get_instance(),
+						'save_level_settings',
+					), 10, 2 );
+					add_action( 'e20r_roles_level_settings_delete', array(
+						self::get_instance(),
+						'delete_level_settings',
+					), 10, 2 );
+					
+					add_filter( 'e20r_roles_add_level_role', array(
+						self::get_instance(),
+						'add_level_forum_role',
+					), 10, 4 );
+					
+					add_filter( 'e20r_roles_delete_level_role', array(
+						self::get_instance(),
+						'remove_level_forum_role',
+					), 10, 4 );
+				}
 				
+				if ( Utilities::is_admin() ) {
+					
+                }
 				add_action( 'init', array( self::get_instance(), 'clear_blocked' ) );
 				add_action( 'template_redirect', array( self::get_instance(), 'restrict_forums' ) );
-				
-				/**
-				 * Membership related settings for role(s) add-on
-				 */
-				add_action( 'e20r_roles_level_settings', array( self::get_instance(), 'load_level_settings' ), 10, 2 );
-				add_action( 'e20r_roles_level_settings_save', array(
-					self::get_instance(),
-					'save_level_settings',
-				), 10, 2 );
-				add_action( 'e20r_roles_level_settings_delete', array(
-					self::get_instance(),
-					'delete_level_settings',
-				), 10, 2 );
-				
-				add_filter( 'e20r_roles_add_level_role', array(
-					self::get_instance(),
-					'add_level_forum_role',
-				), 10, 4 );
-				
-				// TODO: Convert to filter
-				add_filter( 'e20r_roles_delete_level_role', array(
-					self::get_instance(),
-					'remove_level_forum_role',
-				), 10, 4 );
 				
 				/** Access filters for the add-on to use/leverage */
 				add_filter( 'the_posts', array( self::get_instance(), 'check_access' ), 99, 2 );
@@ -2916,11 +2938,13 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					'configure_addon_bbpress_role_caps',
 				), 99, 2 );
 				
-				add_filter( 'pmpro_member_links_bottom', array(
-					self::get_instance(),
-					'add_topics_as_pmpro_account_links',
-				), 10, 0 );
-				
+				if ( is_user_logged_in() ) {
+				 
+					add_filter( 'pmpro_member_links_bottom', array(
+						self::get_instance(),
+						'add_topics_as_pmpro_account_links',
+					), 10, 0 );
+				}
 				add_filter( 'pmpro_has_membership_access_filter', array( self::get_instance(), 'has_access' ), 99, 4 );
 				
 				// Load the filtering logic for PMPro/Forums if set on PMPro's advanced settings page
@@ -2933,11 +2957,6 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 						add_filter( 'pre_get_posts', array( self::get_instance(), 'pre_get_posts' ) );
 					}
 				}
-				
-				add_filter( 'manage_users_custom_column', array(
-					self::get_instance(),
-					'add_user_role_to_list',
-				), 20, 3 );
 				
 				// add_filter( 'the_content', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
 				// add_filter( 'the_excerpt', array( self::get_instance(), 'hide_forum_entry' ), 999, 2 );
@@ -2955,16 +2974,7 @@ if ( ! class_exists( 'E20R\\Roles_For_PMPro\\Addon\\bbPress_Roles' ) ) {
 					) );
 				}
 				
-				add_action( 'save_post_forum', array( self::get_instance(), 'save_forum_protection' ), 99 );
 				
-				add_filter( 'manage_forum_posts_columns', array(
-					self::get_instance(),
-					'set_forum_column_header',
-				), 99 );
-				add_action( 'manage_forum_posts_custom_column', array(
-					self::get_instance(),
-					'level_column_content',
-				), 10, 2 );
 				
 				self::get_instance()->configure_forum_admin_capabilities();
 			}
